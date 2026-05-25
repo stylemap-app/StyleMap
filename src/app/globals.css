@@ -1,0 +1,80 @@
+/*
+  フォントは layout.tsx で next/font/google を使って読み込み、
+  --font-noto / --font-dm-mono の CSS 変数として html に注入する。
+*/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── デザイントークン（CSS カスタムプロパティ） ──────────────────── */
+:root {
+  /* カラー */
+  --color-ink:      #1A1816;
+  --color-paper:    #F7F5F0;
+  --color-clay:     #D4714A;
+  --color-gray-900: #2C2A27;
+  --color-gray-600: #78746E;
+  --color-gray-300: #C5C0B8;
+  --color-gray-100: #ECEAE5;
+  --color-white:    #FFFFFF;
+
+  /* 影 */
+  --shadow-card:  0 1px 4px rgba(26,24,22,0.05), 0 4px 16px rgba(26,24,22,0.06);
+  --shadow-pin:   0 2px 8px rgba(26,24,22,0.22);
+  --shadow-sheet: 0 -4px 24px rgba(26,24,22,0.10);
+
+  /* 角丸 */
+  --radius-card:   12px;
+  --radius-sheet:  16px;
+  --radius-button: 8px;
+  --radius-photo:  8px;
+}
+
+/* ── ベーススタイル ─────────────────────────────────────────────── */
+@layer base {
+  html {
+    color:            var(--color-ink);
+    background-color: var(--color-paper);
+    -webkit-font-smoothing:  antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    /* ブラウザの動的ビューポート高さに対応（iOS Safari のアドレスバー考慮） */
+    min-height: 100dvh;
+    line-height: 1.75;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* タップ時の青ハイライトを StyleMap カラーに統一 */
+  * {
+    -webkit-tap-highlight-color: rgba(212, 113, 74, 0.15);
+  }
+}
+
+/* ── ユーティリティ拡張 ─────────────────────────────────────────── */
+@layer utilities {
+  /* 価格表示専用：数値を等幅で揃える */
+  .font-price {
+    font-family: var(--font-dm-mono), "DM Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  /* 地図ピンのアニメーション（タップ時のフィードバック） */
+  .pin-bounce {
+    animation: pin-bounce 0.3s ease-out;
+  }
+}
+
+@keyframes pin-bounce {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}

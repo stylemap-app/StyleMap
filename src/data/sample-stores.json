@@ -1,0 +1,125 @@
+[
+  {
+    "id": "a1b2c3d4-0001-0000-0000-000000000001",
+    "name": "LOOP VINTAGE",
+    "name_kana": "ループヴィンテージ",
+    "address": "東京都世田谷区北沢2-25-8 B1F",
+    "nearest_station": "下北沢",
+    "lat": 35.6613,
+    "lng": 139.6680,
+    "price_range": 2,
+    "hours": {
+      "regular": [
+        { "open": "12:00", "close": "20:00" },
+        { "open": null,    "close": null    },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "21:00" },
+        { "open": "11:00", "close": "21:00" }
+      ],
+      "note": "月曜定休（祝日の場合は翌火曜）"
+    },
+    "links": {
+      "instagram": "https://www.instagram.com/loop_vintage_shimokita/",
+      "google_maps": "https://maps.google.com/?cid=dummy001"
+    },
+    "operator_review": "地下に降りた瞬間から別世界。アメカジ・ミリタリーを中心に週替わりで入荷。スタッフは声をかけてこないので、ゆっくり掘り出し物を探せます。",
+    "operator_review_updated_at": "2026-05-01T00:00:00Z",
+    "is_published": true,
+    "created_at": "2026-05-01T00:00:00Z",
+    "updated_at": "2026-05-01T00:00:00Z",
+    "photos": [
+      {
+        "id": "photo-0001-01",
+        "url": "https://example.com/photos/loop/main.jpg",
+        "caption": "店内全景",
+        "is_main": true,
+        "sort_order": 0
+      },
+      {
+        "id": "photo-0001-02",
+        "url": "https://example.com/photos/loop/rack.jpg",
+        "caption": "ミリタリーラック",
+        "is_main": false,
+        "sort_order": 1
+      }
+    ],
+    "tags": [
+      { "id": 2,  "type": "style",     "slug": "vintage",            "label_ja": "古着",             "sort_order": 2  },
+      { "id": 6,  "type": "style",     "slug": "american-casual",    "label_ja": "アメカジ",         "sort_order": 6  },
+      { "id": 8,  "type": "style",     "slug": "military",           "label_ja": "ミリタリー",       "sort_order": 8  },
+      { "id": 17, "type": "vibe",      "slug": "easy-solo",          "label_ja": "一人で入りやすい", "sort_order": 1  },
+      { "id": 19, "type": "vibe",      "slug": "staff-quiet",        "label_ja": "声かけされない",   "sort_order": 3  },
+      { "id": 27, "type": "vibe",      "slug": "unique-items",       "label_ja": "他では買えない",   "sort_order": 11 },
+      { "id": 33, "type": "category",  "slug": "tops",               "label_ja": "トップス",         "sort_order": 1  },
+      { "id": 34, "type": "category",  "slug": "outerwear",          "label_ja": "アウター",         "sort_order": 3  },
+      { "id": 37, "type": "category",  "slug": "used",               "label_ja": "古着",             "sort_order": 8  },
+      { "id": 41, "type": "gender",    "slug": "unisex",             "label_ja": "ユニセックス",     "sort_order": 3  },
+      { "id": 44, "type": "age_group", "slug": "early-twenties",     "label_ja": "20代前半",         "sort_order": 2  },
+      { "id": 45, "type": "age_group", "slug": "late-twenties",      "label_ja": "20代後半",         "sort_order": 3  }
+    ]
+  },
+  {
+    "id": "a1b2c3d4-0002-0000-0000-000000000002",
+    "name": "SORA SELECT",
+    "name_kana": "ソラセレクト",
+    "address": "東京都世田谷区北沢2-14-3 1F",
+    "nearest_station": "下北沢",
+    "lat": 35.6629,
+    "lng": 139.6687,
+    "price_range": 2,
+    "hours": {
+      "regular": [
+        { "open": "11:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "12:00", "close": "20:00" },
+        { "open": "11:00", "close": "21:00" },
+        { "open": "11:00", "close": "21:00" }
+      ],
+      "note": null
+    },
+    "links": {
+      "instagram": "https://www.instagram.com/sora_select/",
+      "google_maps": "https://maps.google.com/?cid=dummy002",
+      "official_site": "https://sora-select.example.com"
+    },
+    "operator_review": "韓国トレンドをいち早く取り入れるセレクトショップ。毎週木曜に新入荷。コーデ提案型のディスプレイが多く、「全身これで行ける」を目指した品揃え。初めて韓国系に挑戦する人にも入りやすい雰囲気です。",
+    "operator_review_updated_at": "2026-05-10T00:00:00Z",
+    "is_published": true,
+    "created_at": "2026-05-10T00:00:00Z",
+    "updated_at": "2026-05-10T00:00:00Z",
+    "photos": [
+      {
+        "id": "photo-0002-01",
+        "url": "https://example.com/photos/sora/main.jpg",
+        "caption": "外観",
+        "is_main": true,
+        "sort_order": 0
+      },
+      {
+        "id": "photo-0002-02",
+        "url": "https://example.com/photos/sora/coord.jpg",
+        "caption": "コーデ提案ディスプレイ",
+        "is_main": false,
+        "sort_order": 1
+      }
+    ],
+    "tags": [
+      { "id": 3,  "type": "style",     "slug": "korean",             "label_ja": "韓国系",           "sort_order": 3  },
+      { "id": 5,  "type": "style",     "slug": "casual",             "label_ja": "カジュアル",       "sort_order": 5  },
+      { "id": 12, "type": "style",     "slug": "feminine",           "label_ja": "フェミニン",       "sort_order": 12 },
+      { "id": 18, "type": "vibe",      "slug": "beginner-friendly",  "label_ja": "初心者向け",       "sort_order": 2  },
+      { "id": 21, "type": "vibe",      "slug": "instagram-worthy",   "label_ja": "写真映えする",     "sort_order": 5  },
+      { "id": 26, "type": "vibe",      "slug": "coordinate-display", "label_ja": "コーデ提案が多い", "sort_order": 10 },
+      { "id": 33, "type": "category",  "slug": "tops",               "label_ja": "トップス",         "sort_order": 1  },
+      { "id": 34, "type": "category",  "slug": "bottoms",            "label_ja": "ボトムス",         "sort_order": 2  },
+      { "id": 36, "type": "category",  "slug": "accessories",        "label_ja": "アクセサリー",     "sort_order": 6  },
+      { "id": 42, "type": "gender",    "slug": "womens",             "label_ja": "レディース",       "sort_order": 2  },
+      { "id": 43, "type": "age_group", "slug": "teens",              "label_ja": "10代後半",         "sort_order": 1  },
+      { "id": 44, "type": "age_group", "slug": "early-twenties",     "label_ja": "20代前半",         "sort_order": 2  }
+    ]
+  }
+]
