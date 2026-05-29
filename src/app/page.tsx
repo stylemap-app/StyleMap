@@ -1,8 +1,19 @@
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-paper px-6">
-      <h1 className="text-[22px] font-bold tracking-heading text-ink">StyleMap</h1>
-      <p className="text-sm text-gray-600">自分に合う服屋を見つけよう</p>
-    </main>
-  );
+import { supabase } from "@/lib/supabase";
+import MapView from "@/components/map/MapView";
+import type { StoreForMap } from "@/components/map/MapView";
+
+export default async function Home() {
+  const { data, error } = await supabase
+    .from("stores")
+    .select(
+      "id, name, nearest_station, price_range, lat, lng, store_photos(url, is_main, sort_order)"
+    )
+    .eq("is_published", true)
+    .order("name");
+
+  if (error) {
+    console.error("Supabase fetch error:", error.message);
+  }
+
+  return <MapView stores={(data ?? []) as unknown as StoreForMap[]} />;
 }
