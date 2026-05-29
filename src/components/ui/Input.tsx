@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 export type InputVariant = "default" | "search";
 export type InputSize = "sm" | "md" | "lg";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "size"> {
   variant?: InputVariant;
   size?: InputSize;
   label?: string;

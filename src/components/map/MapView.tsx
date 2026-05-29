@@ -13,6 +13,9 @@ export type StoreForMap = {
   lat: number | string;
   lng: number | string;
   store_photos: { url: string; is_main: boolean; sort_order: number }[];
+  store_tags?: {
+    tag_masters: { type: string; slug: string; label_ja: string } | null;
+  }[];
 };
 
 const SHIMOKITAZAWA = { lat: 35.6613, lng: 139.668 };
@@ -31,9 +34,9 @@ export default function MapView({ stores }: { stores: StoreForMap[] }) {
   }, []);
 
   return (
-    <div className="flex flex-col overflow-hidden h-[100dvh]">
+    <div className="flex flex-col h-full overflow-hidden">
       {/* 地図エリア：80% */}
-      <div className="h-[80dvh]">
+      <div className="flex-[4] min-h-0">
         <APIProvider apiKey={API_KEY}>
           <Map
             defaultCenter={SHIMOKITAZAWA}
@@ -65,7 +68,7 @@ export default function MapView({ stores }: { stores: StoreForMap[] }) {
       </div>
 
       {/* カルーセルエリア：20% */}
-      <div className="h-[20dvh] min-h-[120px] bg-paper flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory">
+      <div className="flex-[1] min-h-[120px] bg-paper flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory">
         {stores.map((store) => {
           const mainPhoto =
             store.store_photos.find((p) => p.is_main) ??
