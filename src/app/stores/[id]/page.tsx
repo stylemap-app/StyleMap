@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import HeroCarousel from "@/components/store/HeroCarousel";
+import FavoriteButton from "@/components/auth/FavoriteButton";
 import type { PriceRange, StoreHours, StoreLinks, TagType } from "@/types/store";
 
 const PRICE_SYMBOLS: Record<PriceRange, string> = {
@@ -51,6 +52,7 @@ export default async function StorePage({
 }: {
   params: { id: string };
 }) {
+  const supabase = createClient();
   const { data: store } = await supabase
     .from("stores")
     .select(
@@ -105,20 +107,7 @@ export default async function StorePage({
           </svg>
           <span className="text-sm">戻る</span>
         </Link>
-        {/* お気に入りボタン（見た目のみ） */}
-        <button
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 active:bg-gray-200"
-          aria-label="お気に入りに追加"
-        >
-          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M10 17S3 12.5 3 8a4 4 0 018 0 4 4 0 018 0c0 4.5-7 9-7 9z"
-              stroke="#1A1816"
-              strokeWidth="1.5"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+        <FavoriteButton />
       </div>
 
       {/* ヒーロー画像 */}

@@ -1,5 +1,7 @@
 "use client";
 
+import AuthButton from "@/components/auth/AuthButton";
+
 export type View = "map" | "list";
 
 type Props = {
@@ -9,7 +11,7 @@ type Props = {
 
 export default function ViewTabs({ currentView, onViewChange }: Props) {
   return (
-    <div className="flex shrink-0 border-b border-gray-200 bg-paper">
+    <div className="flex shrink-0 items-center border-b border-gray-200 bg-paper">
       {(["map", "list"] as View[]).map((tab) => (
         <button
           key={tab}
@@ -23,6 +25,9 @@ export default function ViewTabs({ currentView, onViewChange }: Props) {
           {tab === "map" ? "マップ" : "一覧"}
         </button>
       ))}
+      <div className="px-3 shrink-0 flex items-center h-11">
+        <AuthButton />
+      </div>
     </div>
   );
 }

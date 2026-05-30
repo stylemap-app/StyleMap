@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 import HomeClient from "@/components/layout/HomeClient";
 import type { StoreForMap } from "@/components/map/MapView";
 import type { View } from "@/components/layout/ViewTabs";
@@ -10,6 +10,7 @@ export default async function Home({
 }: {
   searchParams: { view?: string };
 }) {
+  const supabase = createClient();
   const [{ data: storeData, error }, { data: tagData }] = await Promise.all([
     supabase
       .from("stores")

@@ -1,0 +1,115 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
+
+export default function AuthButton() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // メニュー外クリックで閉じる
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [menuOpen]);
+
+  const handleLogin = async () => {
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(window.location.pathname)}`,
+      },
+    });
+  };
+
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+  };
+
+  // 初期ロード中はプレースホルダーを表示してレイアウトシフトを防ぐ
+  if (user === undefined) {
+    return <div className="w-16 h-7" />;
+  }
+
+  if (!user) {
+    return (
+      <button
+        onClick={handleLogin}
+        className="text-xs font-medium text-ink h-7 px-3 rounded-full bg-gray-100 active:bg-gray-200 whitespace-nowrap"
+      >
+        ログイン
+      </button>
+    );
+  }
+
+  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
+  const name = user.user_metadata?.full_name as string | undefined;
+  const initial = (name ?? user.email ?? "U").slice(0, 1).toUpperCase();
+
+  return (
+    <div ref={containerRef} className="relative">
+      {/* アバターボタン */}
+      <button
+        onClick={() => setMenuOpen((prev) => !prev)}
+        className="w-8 h-8 rounded-full overflow-hidden bg-clay/20 flex items-center justify-center shrink-0 active:opacity-70"
+        aria-label={`${name ?? "ユーザー"}のメニューを開く`}
+        aria-expanded={menuOpen}
+      >
+        {avatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={avatarUrl}
+            alt={name ?? "ユーザー"}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-xs font-bold text-clay">{initial}</span>
+        )}
+      </button>
+
+      {/* ドロップダウンメニュー */}
+      {menuOpen && (
+        <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[140px] bg-paper rounded-card shadow-card border border-gray-100 overflow-hidden">
+          {name && (
+            <div className="px-3 py-2 border-b border-gray-100">
+              <p className="text-[11px] text-gray-500 truncate">{name}</p>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-3 py-2.5 text-sm text-ink hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          >
+            ログアウト
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
