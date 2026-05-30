@@ -4,6 +4,7 @@ import { useRef, useState, useCallback } from "react";
 import { APIProvider, Map, AdvancedMarker } from "@vis.gl/react-google-maps";
 import StoreCard from "@/components/store/StoreCard";
 import type { PriceRange } from "@/types/store";
+import { calcEntryScore } from "@/lib/vibes";
 
 export type StoreForMap = {
   id: string;
@@ -21,7 +22,12 @@ export type StoreForMap = {
 const SHIMOKITAZAWA = { lat: 35.6613, lng: 139.668 };
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
-export default function MapView({ stores }: { stores: StoreForMap[] }) {
+type Props = {
+  stores: StoreForMap[];
+  activeVibeSlugs?: string[];
+};
+
+export default function MapView({ stores }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -87,6 +93,7 @@ export default function MapView({ stores }: { stores: StoreForMap[] }) {
                 priceRange={store.price_range}
                 mainPhotoUrl={mainPhoto?.url}
                 isSelected={selectedId === store.id}
+                entryScore={calcEntryScore(store.store_tags ?? [])}
               />
             </div>
           );

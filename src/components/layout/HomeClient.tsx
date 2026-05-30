@@ -96,9 +96,9 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
             onReset={handleReset}
           />
         ) : view === "map" ? (
-          <MapView stores={displayStores} />
+          <MapView stores={displayStores} activeVibeSlugs={filter.vibes} />
         ) : (
-          <ListView stores={displayStores} />
+          <ListView stores={displayStores} activeVibeSlugs={filter.vibes} />
         )}
       </div>
 
