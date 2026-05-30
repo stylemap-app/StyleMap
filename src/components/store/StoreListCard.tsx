@@ -1,9 +1,7 @@
-// BEFORE: name / styleTags / price + walkingMinutes
-// AFTER:  name / styleTags / entryDots + vibeBadges / price + walkingMinutes
-
 import Link from "next/link";
 import type { PriceRange } from "@/types/store";
 import { VIBE_BADGE_LABEL } from "@/lib/vibes";
+import FavoriteButton from "@/components/auth/FavoriteButton";
 
 const PRICE_SYMBOLS: Record<PriceRange, string> = {
   1: "¥",
@@ -22,6 +20,8 @@ type Props = {
   entryScore: number;
   vibeBadges: string[];
   activeVibeSlugs: string[];
+  isFavorited: boolean;
+  onFavoriteToggle: (storeId: string, isFavorited: boolean) => void;
 };
 
 export default function StoreListCard({
@@ -34,6 +34,8 @@ export default function StoreListCard({
   entryScore,
   vibeBadges,
   activeVibeSlugs,
+  isFavorited,
+  onFavoriteToggle,
 }: Props) {
   const showVibeRow = entryScore > 0 || vibeBadges.length > 0;
 
@@ -42,16 +44,28 @@ export default function StoreListCard({
       href={`/stores/${id}`}
       className="flex flex-col rounded-card overflow-hidden bg-white shadow-card active:opacity-75 transition-opacity"
     >
-      {mainPhotoUrl ? (
-        <img
-          src={mainPhotoUrl}
-          alt={name}
-          className="w-full object-cover"
-          style={{ height: "160px" }}
-        />
-      ) : (
-        <div className="w-full bg-gray-100" style={{ height: "160px" }} />
-      )}
+      {/* 写真エリア（ハートボタンをオーバーレイ） */}
+      <div className="relative">
+        {mainPhotoUrl ? (
+          <img
+            src={mainPhotoUrl}
+            alt={name}
+            className="w-full object-cover"
+            style={{ height: "160px" }}
+          />
+        ) : (
+          <div className="w-full bg-gray-100" style={{ height: "160px" }} />
+        )}
+        <div className="absolute top-2 right-2">
+          <FavoriteButton
+            storeId={id}
+            initialFavorited={isFavorited}
+            size="sm"
+            onToggle={onFavoriteToggle}
+          />
+        </div>
+      </div>
+
       <div className="p-3">
         <p className="text-sm font-medium text-ink leading-snug">{name}</p>
 
@@ -68,11 +82,13 @@ export default function StoreListCard({
           </div>
         )}
 
-        {/* NEW: entry score dots + vibe badge chips */}
         {showVibeRow && (
           <div className="flex items-center justify-between mt-2">
             {entryScore > 0 ? (
-              <div className="flex items-center gap-0.5" aria-label={`入りやすさ ${entryScore}/5`}>
+              <div
+                className="flex items-center gap-0.5"
+                aria-label={`入りやすさ ${entryScore}/5`}
+              >
                 {[1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
@@ -112,9 +128,7 @@ export default function StoreListCard({
           <span className="font-price text-xs text-gray-500">
             {PRICE_SYMBOLS[priceRange]}
           </span>
-          <span className="text-xs text-gray-500">
-            徒歩約{walkingMinutes}分
-          </span>
+          <span className="text-xs text-gray-500">徒歩約{walkingMinutes}分</span>
         </div>
       </div>
     </Link>

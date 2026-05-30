@@ -25,9 +25,15 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 type Props = {
   stores: StoreForMap[];
   activeVibeSlugs?: string[];
+  favoritedIds?: string[];
+  onFavoriteToggle?: (storeId: string, isFavorited: boolean) => void;
 };
 
-export default function MapView({ stores }: Props) {
+export default function MapView({
+  stores,
+  favoritedIds = [],
+  onFavoriteToggle,
+}: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
@@ -94,6 +100,8 @@ export default function MapView({ stores }: Props) {
                 mainPhotoUrl={mainPhoto?.url}
                 isSelected={selectedId === store.id}
                 entryScore={calcEntryScore(store.store_tags ?? [])}
+                isFavorited={favoritedIds.includes(store.id)}
+                onFavoriteToggle={onFavoriteToggle}
               />
             </div>
           );

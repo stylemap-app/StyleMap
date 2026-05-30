@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MapView from "@/components/map/MapView";
 import ListView from "@/components/store/ListView";
@@ -15,6 +15,8 @@ import {
   activeFilterCount,
   EMPTY_FILTER,
 } from "@/lib/filter";
+import { createClient } from "@/lib/supabase/client";
+import { getUserFavoritedStoreIds } from "@/lib/favorites";
 import type { StoreForMap } from "@/components/map/MapView";
 import type { View } from "./ViewTabs";
 import type { TagMaster } from "@/types/store";
@@ -29,8 +31,45 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
   const [view, setView] = useState<View>(defaultView);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
   const router = useRouter();
   const [filter, setFilter] = useFilterState();
+
+  // 認証状態に連動してお気に入り一覧を一括取得
+  useEffect(() => {
+    const supabase = createClient();
+
+    const fetchFavorites = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        const ids = await getUserFavoritedStoreIds(supabase);
+        setFavoritedIds(ids);
+      } else {
+        setFavoritedIds([]);
+      }
+    };
+
+    fetchFavorites();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      fetchFavorites();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleFavoriteToggle = useCallback(
+    (storeId: string, isFavorited: boolean) => {
+      setFavoritedIds((prev) =>
+        isFavorited ? [...prev, storeId] : prev.filter((id) => id !== storeId)
+      );
+    },
+    []
+  );
 
   const handleViewChange = (newView: View) => {
     setView(newView);
@@ -96,9 +135,19 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
             onReset={handleReset}
           />
         ) : view === "map" ? (
-          <MapView stores={displayStores} activeVibeSlugs={filter.vibes} />
+          <MapView
+            stores={displayStores}
+            activeVibeSlugs={filter.vibes}
+            favoritedIds={favoritedIds}
+            onFavoriteToggle={handleFavoriteToggle}
+          />
         ) : (
-          <ListView stores={displayStores} activeVibeSlugs={filter.vibes} />
+          <ListView
+            stores={displayStores}
+            activeVibeSlugs={filter.vibes}
+            favoritedIds={favoritedIds}
+            onFavoriteToggle={handleFavoriteToggle}
+          />
         )}
       </div>
 

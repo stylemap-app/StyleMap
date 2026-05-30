@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -102,9 +103,24 @@ export default function AuthButton() {
               <p className="text-[11px] text-gray-500 truncate">{name}</p>
             </div>
           )}
+          <Link
+            href="/favorites"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 text-sm text-ink hover:bg-gray-50 active:bg-gray-100 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden>
+              <path
+                d="M10 17S3 12.5 3 8a4 4 0 018 0 4 4 0 018 0c0 4.5-7 9-7 9z"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+              />
+            </svg>
+            お気に入り
+          </Link>
           <button
             onClick={handleLogout}
-            className="w-full text-left px-3 py-2.5 text-sm text-ink hover:bg-gray-50 active:bg-gray-100 transition-colors"
+            className="w-full text-left px-3 py-2.5 text-sm text-ink hover:bg-gray-50 active:bg-gray-100 transition-colors border-t border-gray-100"
           >
             ログアウト
           </button>

@@ -53,15 +53,29 @@ export default async function StorePage({
   params: { id: string };
 }) {
   const supabase = createClient();
-  const { data: store } = await supabase
-    .from("stores")
-    .select(
-      "id, name, name_kana, address, nearest_station, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
-    )
-    .eq("id", params.id)
-    .maybeSingle();
+
+  const [{ data: store }, authResult] = await Promise.all([
+    supabase
+      .from("stores")
+      .select(
+        "id, name, name_kana, address, nearest_station, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
+      )
+      .eq("id", params.id)
+      .maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
 
   if (!store) notFound();
+
+  const user = authResult.data.user;
+  let initialFavorited = false;
+  if (user) {
+    const { count } = await supabase
+      .from("favorites")
+      .select("store_id", { count: "exact", head: true })
+      .eq("store_id", store.id);
+    initialFavorited = (count ?? 0) > 0;
+  }
 
   const photos = [...(store.store_photos ?? [])].sort((a, b) => {
     if (a.is_main && !b.is_main) return -1;
@@ -107,7 +121,7 @@ export default async function StorePage({
           </svg>
           <span className="text-sm">戻る</span>
         </Link>
-        <FavoriteButton />
+        <FavoriteButton storeId={store.id} initialFavorited={initialFavorited} />
       </div>
 
       {/* ヒーロー画像 */}
