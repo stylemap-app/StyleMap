@@ -20,6 +20,30 @@ const PRICE_LABELS: Record<PriceRange, string> = {
 
 const DAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"];
 
+const VIBE_CHECKLIST: Record<string, string> = {
+  "easy-solo":          "一人でふらっと入れる",
+  "beginner-friendly":  "ファッション初心者でも安心",
+  "staff-quiet":        "自分のペースでゆっくり見られる",
+  "staff-helpful":      "スタッフに気軽に相談できる",
+  "instagram-worthy":   "写真映えする空間づくり",
+  "quiet-atmosphere":   "落ち着いてじっくり選べる",
+  "good-music":         "流れる音楽が心地よい",
+  "large-fitting-room": "試着室が広くて使いやすい",
+  "frequent-sale":      "セールやお得な企画が多い",
+  "single-item":        "1点から気軽に買いやすい",
+  "coordinate-display": "コーデのヒントになる展示が多い",
+  "unique-items":       "ここでしか出会えないアイテムがある",
+  "pet-friendly":       "ペットと一緒に来られる",
+};
+
+const ENTRY_SCORE_SLUGS = [
+  "easy-solo",
+  "beginner-friendly",
+  "staff-quiet",
+  "staff-helpful",
+  "quiet-atmosphere",
+];
+
 type Tag = { type: string; slug: string; label_ja: string };
 
 export default async function StorePage({
@@ -53,6 +77,10 @@ export default async function StorePage({
   const vibeTags = byType("vibe");
   const genderTags = byType("gender");
   const ageGroupTags = byType("age_group");
+
+  const entryScore = vibeTags.filter((t) =>
+    ENTRY_SCORE_SLUGS.includes(t.slug)
+  ).length;
 
   const hours = store.hours as unknown as StoreHours;
   const links = store.links as unknown as StoreLinks;
@@ -122,21 +150,57 @@ export default async function StorePage({
           </div>
         </section>
 
-        {/* 2. 雰囲気タグ */}
+        {/* 2. 入店前チェック */}
         {vibeTags.length > 0 && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
-              雰囲気
+              入店前チェック
             </h2>
-            <div className="flex flex-wrap gap-1.5">
-              {vibeTags.map((tag) => (
-                <span
-                  key={tag.slug}
-                  className="text-xs bg-gray-100 text-ink px-2.5 py-1 rounded-full"
-                >
-                  {tag.label_ja}
-                </span>
-              ))}
+            <div className="rounded-card bg-white shadow-card p-4">
+              <ul className="space-y-3">
+                {vibeTags.map((tag) => (
+                  <li key={tag.slug} className="flex items-start gap-2.5">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="shrink-0 mt-0.5 text-clay"
+                      aria-hidden
+                    >
+                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3" />
+                      <path
+                        d="M5 8l2 2 4-4"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-sm text-ink leading-snug">
+                      {VIBE_CHECKLIST[tag.slug] ?? tag.label_ja}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {entryScore > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-gray-500 tracking-label uppercase">
+                    入りやすさ
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div
+                        key={i}
+                        className={`w-3 h-3 rounded-full ${
+                          i <= entryScore ? "bg-clay" : "bg-gray-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </section>
         )}
