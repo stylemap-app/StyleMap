@@ -19,6 +19,7 @@ type Props = {
   initialFavorited: boolean;
   size?: "sm" | "md";
   onToggle?: (storeId: string, isFavorited: boolean) => void;
+  onActionComplete?: () => void;
 };
 
 export default function FavoriteButton({
@@ -26,6 +27,7 @@ export default function FavoriteButton({
   initialFavorited,
   size = "md",
   onToggle,
+  onActionComplete,
 }: Props) {
   const [favorited, setFavorited] = useState(initialFavorited);
   const [isPopped, setIsPopped] = useState(false);
@@ -66,6 +68,7 @@ export default function FavoriteButton({
         setFavorited(true);
         popHeart();
         onToggle?.(storeId, true);
+        onActionComplete?.();
         return;
       }
 
@@ -75,6 +78,7 @@ export default function FavoriteButton({
           await removeAllFavorites(supabase, storeId);
           setFavorited(false);
           onToggle?.(storeId, false);
+          onActionComplete?.();
         } else {
           await addFavoriteToList(
             supabase,
@@ -85,6 +89,7 @@ export default function FavoriteButton({
           setFavorited(true);
           popHeart();
           onToggle?.(storeId, true);
+          onActionComplete?.();
         }
         return;
       }
@@ -122,6 +127,7 @@ export default function FavoriteButton({
     setFavorited(newFavorited);
     if (newFavorited) popHeart();
     onToggle?.(storeId, newFavorited);
+    onActionComplete?.();
   };
 
   const containerSize = size === "sm" ? "w-7 h-7" : "w-9 h-9";

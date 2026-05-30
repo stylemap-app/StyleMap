@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -8,7 +10,13 @@ type Props = {
 };
 
 export default function LoginModal({ isOpen, onClose }: Props) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleLogin = async () => {
     const supabase = createClient();
@@ -20,10 +28,19 @@ export default function LoginModal({ isOpen, onClose }: Props) {
     });
   };
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-      <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-2xl p-6 shadow-xl">
+      <div
+        className="fixed inset-0 z-40 bg-black/30"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+      />
+      <div
+        className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-2xl p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex flex-col items-center text-center gap-2">
           <div className="w-12 h-12 rounded-full bg-clay/15 flex items-center justify-center mb-1">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -56,7 +73,8 @@ export default function LoginModal({ isOpen, onClose }: Props) {
           キャンセル
         </button>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 

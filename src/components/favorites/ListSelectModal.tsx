@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { FavoriteList } from "@/lib/favorites";
 
 type Props = {
@@ -22,8 +23,20 @@ export default function ListSelectModal({
     new Set(currentListIds)
   );
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // モーダルが開くたびに選択状態をリセット
+  useEffect(() => {
+    if (isOpen) {
+      setSelected(new Set(currentListIds));
+    }
+  }, [isOpen, currentListIds]);
+
+  if (!isOpen || !mounted) return null;
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -41,10 +54,21 @@ export default function ListSelectModal({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-      <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
+      {/* backdrop: stopPropagation で Link への伝播を防ぐ */}
+      <div
+        className="fixed inset-0 z-40 bg-black/30"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+      />
+      {/* モーダル本体: stopPropagation でモーダル内クリックを封じ込める */}
+      <div
+        className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-[15px] font-bold text-ink">リストに追加</h2>
           <button
@@ -104,6 +128,7 @@ export default function ListSelectModal({
           </button>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

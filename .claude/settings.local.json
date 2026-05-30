@@ -3,7 +3,16 @@
     "allow": [
       "PowerShell(npm install *)",
       "PowerShell(npm run *)",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(npm run *)",
+      "Bash(Start-Sleep -Seconds 8)",
+      "Bash(Get-Content \"C:\\\\Users\\\\w0705\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-w0705-Documents-stylemap\\\\846ae3cc-1bfc-455f-bedf-c0c774fae1c7\\\\tasks\\\\b6116co3b.output\" -Tail 30)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(git commit *)",
+      "Bash(npm install *)"
     ]
   }
 }

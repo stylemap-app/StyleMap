@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## データベースセットアップ
+
+### 1. スキーマの作成（初回のみ）
+
+[Supabase Dashboard](https://supabase.com/dashboard) → SQL Editor → New query を開き、
+`supabase/migrations/001_initial.sql` の内容を貼り付けて実行してください。
+
+テーブル・インデックス・RLSポリシー・タグマスタ（48件）が作成されます。
+
+### 2. サンプルデータの投入（任意）
+
+下北沢エリアの架空店舗データ20件を投入する場合は、
+`supabase/seeds/seed.sql` の内容を SQL Editor に貼り付けて実行してください。
+
+| ファイル | 内容 |
+|---------|------|
+| `supabase/migrations/001_initial.sql` | テーブル定義・RLS・タグマスタ |
+| `supabase/seeds/seed.sql` | 架空店舗20件・写真40件・タグ紐付け |
+
+> **注意:** 各ファイルは一度だけ実行してください。再実行するとエラーになります。
