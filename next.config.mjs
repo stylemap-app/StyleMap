@@ -3,8 +3,12 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        // Supabase Storage（店舗写真）
-        // ワイルドカードは環境によって不安定なためプロジェクト固有のホスト名を直指定
+        // seed.sql のプレースホルダー画像（本番写真に差し替えるまで使用）
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+      {
+        // Supabase Storage（本番店舗写真）
         protocol: "https",
         hostname: "drihaetuspdvdjbfuffx.supabase.co",
         pathname: "/storage/v1/object/public/**",
