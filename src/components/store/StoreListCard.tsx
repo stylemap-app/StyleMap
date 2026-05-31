@@ -45,23 +45,21 @@ export default function StoreListCard({
       href={`/stores/${id}`}
       className="flex flex-col rounded-card overflow-hidden bg-white shadow-card active:opacity-75 transition-opacity"
     >
-      {/* 写真エリア（ハートボタンをオーバーレイ） */}
-      <div className="relative">
+      {/* 写真エリア（ハートボタンをオーバーレイ）
+          relative + height を1つの div に集約 */}
+      <div className="relative w-full" style={{ height: "160px" }}>
         {mainPhotoUrl ? (
-          // 160px の相対コンテナで fill Image を受け取る（モバイル1列 / sm 以上 2列）
-          <div className="relative w-full" style={{ height: "160px" }}>
-            <Image
-              src={mainPhotoUrl}
-              alt={name}
-              fill
-              className="object-cover"
-              sizes="(max-width: 640px) 100vw, 50vw"
-            />
-          </div>
+          <Image
+            src={mainPhotoUrl}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 100vw, 50vw"
+          />
         ) : (
-          <div className="w-full bg-gray-100" style={{ height: "160px" }} />
+          <div className="h-full bg-gray-100" />
         )}
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-2 z-10">
           <FavoriteButton
             storeId={id}
             initialFavorited={isFavorited}

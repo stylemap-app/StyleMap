@@ -4,8 +4,9 @@ const nextConfig = {
     remotePatterns: [
       {
         // Supabase Storage（店舗写真）
+        // ワイルドカードは環境によって不安定なためプロジェクト固有のホスト名を直指定
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "drihaetuspdvdjbfuffx.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
       {

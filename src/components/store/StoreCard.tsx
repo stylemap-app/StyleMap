@@ -38,23 +38,21 @@ export default function StoreCard({
         isSelected ? "border-clay" : "border-transparent"
       }`}
     >
-      {/* 写真エリア（ハートをオーバーレイ） */}
-      <div className="relative">
+      {/* 写真エリア（ハートをオーバーレイ）
+          relative + h-[72px] を1つの div に集約し fill Image の基準を明確化 */}
+      <div className="relative h-[72px]">
         {mainPhotoUrl ? (
-          // h-[72px] の相対コンテナで fill Image を受け取る（カード幅 w-36=144px 固定）
-          <div className="relative h-[72px]">
-            <Image
-              src={mainPhotoUrl}
-              alt={name}
-              fill
-              className="object-cover"
-              sizes="144px"
-            />
-          </div>
+          <Image
+            src={mainPhotoUrl}
+            alt={name}
+            fill
+            className="object-cover"
+            sizes="144px"
+          />
         ) : (
-          <div className="h-[72px] bg-gray-100" />
+          <div className="h-full bg-gray-100" />
         )}
-        <div className="absolute top-1 right-1">
+        <div className="absolute top-1 right-1 z-10">
           <FavoriteButton
             storeId={id}
             initialFavorited={isFavorited}
