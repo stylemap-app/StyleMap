@@ -34,6 +34,14 @@ MVPエリアは下北沢または原宿。
 - タグ検索機能（タグが30種を超えたら）
 - これらは店舗数100件超え後に検討
 
+## 公開後にやること（本番デプロイ後）
+- 本番店舗写真をSupabase Storageにアップロード
+  - バケット名：store-photos（Public bucket）
+  - store_photosテーブルのurl列を本番URLに更新
+- next.config.mjsからplacehold.coエントリを削除
+- ImageWithFallbackは本番画像差し替え後も保持
+- 本番ドメインに合わせてNEXT_PUBLIC_SITE_URLを更新
+
 ## 将来の改善案（公開後・ユーザーフィードバック後）
 - フィルターのアニメーション・トランジション強化
 - スコア表示（マッチ度★★★）
