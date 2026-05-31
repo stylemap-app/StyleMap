@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ui/ImageWithFallback";
 
 type Photo = {
   id: string;
@@ -42,11 +42,9 @@ export default function HeroCarousel({
         {photos.map((photo, i) => (
           // relative + 固定高で fill モードの Image を受け取る
           <div key={photo.id} className="relative flex-none w-full snap-start" style={{ height: "280px" }}>
-            <Image
+            <ImageWithFallback
               src={photo.url}
               alt={`${storeName}${photo.caption ? ` - ${photo.caption}` : ""}`}
-              fill
-              className="object-cover"
               sizes="100vw"
               priority={i === 0}
             />

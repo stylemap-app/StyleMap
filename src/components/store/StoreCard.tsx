@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import type { PriceRange } from "@/types/store";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 
@@ -42,15 +42,13 @@ export default function StoreCard({
           relative + h-[72px] を1つの div に集約し fill Image の基準を明確化 */}
       <div className="relative h-[72px]">
         {mainPhotoUrl ? (
-          <Image
+          <ImageWithFallback
             src={mainPhotoUrl}
             alt={name}
-            fill
-            className="object-cover"
             sizes="144px"
           />
         ) : (
-          <div className="h-full bg-gray-100" />
+          <div className="h-full bg-gray-200" />
         )}
         <div className="absolute top-1 right-1 z-10">
           <FavoriteButton

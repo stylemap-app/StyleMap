@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import type { PriceRange } from "@/types/store";
 import { VIBE_BADGE_LABEL } from "@/lib/vibes";
 import FavoriteButton from "@/components/auth/FavoriteButton";
@@ -49,15 +49,13 @@ export default function StoreListCard({
           relative + height を1つの div に集約 */}
       <div className="relative w-full" style={{ height: "160px" }}>
         {mainPhotoUrl ? (
-          <Image
+          <ImageWithFallback
             src={mainPhotoUrl}
             alt={name}
-            fill
-            className="object-cover"
             sizes="(max-width: 640px) 100vw, 50vw"
           />
         ) : (
-          <div className="h-full bg-gray-100" />
+          <div className="h-full bg-gray-200" />
         )}
         <div className="absolute top-2 right-2 z-10">
           <FavoriteButton

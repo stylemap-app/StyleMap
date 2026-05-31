@@ -9,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 export default function AuthButton() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,14 +85,14 @@ export default function AuthButton() {
         aria-label={`${name ?? "ユーザー"}のメニューを開く`}
         aria-expanded={menuOpen}
       >
-        {avatarUrl ? (
-          // Google アバターは lh3.googleusercontent.com から配信（next.config に許可済み）
+        {avatarUrl && !avatarError ? (
           <Image
             src={avatarUrl}
             alt={name ?? "ユーザー"}
             width={36}
             height={36}
             className="w-full h-full object-cover"
+            onError={() => setAvatarError(true)}
           />
         ) : (
           <span className="text-xs font-bold text-clay">{initial}</span>
