@@ -44,7 +44,7 @@ export default function EditListModal({
     return (
       <>
         <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-        <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
+        <div className="fixed inset-x-6 top-1/3 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
           <div className="px-4 pt-5 pb-3">
             <h2 className="text-[15px] font-bold text-ink mb-2">
               リストを削除しますか？
@@ -78,7 +78,7 @@ export default function EditListModal({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-      <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
+      <div className="fixed inset-x-6 top-1/3 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-[15px] font-bold text-ink">リストを編集</h2>
           <button

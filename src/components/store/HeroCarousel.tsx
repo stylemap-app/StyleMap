@@ -38,13 +38,14 @@ export default function HeroCarousel({
         className="flex overflow-x-auto snap-x snap-mandatory"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {photos.map((photo) => (
+        {photos.map((photo, i) => (
           <div key={photo.id} className="flex-none w-full snap-start">
             <img
               src={photo.url}
               alt={`${storeName}${photo.caption ? ` - ${photo.caption}` : ""}`}
               className="w-full object-cover"
               style={{ height: "280px" }}
+              loading={i === 0 ? "eager" : "lazy"}
             />
           </div>
         ))}

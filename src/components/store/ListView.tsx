@@ -27,8 +27,8 @@ export default function ListView({
   onFavoriteToggle,
 }: Props) {
   return (
-    <div className="h-full overflow-y-auto bg-paper">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+    <div className="h-full overflow-y-auto overscroll-contain bg-paper">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
         {stores.map((store) => {
           const mainPhoto =
             store.store_photos.find((p) => p.is_main) ??

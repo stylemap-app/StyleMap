@@ -26,7 +26,7 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: Props) {
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
-      <div className="fixed inset-x-6 top-1/2 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
+      <div className="fixed inset-x-6 top-1/3 -translate-y-1/2 z-50 bg-paper rounded-card shadow-sheet overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <h2 className="text-[15px] font-bold text-ink">新しいリストを作成</h2>
           <button

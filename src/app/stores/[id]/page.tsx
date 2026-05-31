@@ -163,23 +163,7 @@ export default async function StorePage({
               <ul className="space-y-3">
                 {vibeTags.map((tag) => (
                   <li key={tag.slug} className="flex items-start gap-2.5">
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="shrink-0 mt-0.5 text-clay"
-                      aria-hidden
-                    >
-                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.3" />
-                      <path
-                        d="M5 8l2 2 4-4"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <div className="w-2 h-2 rounded-full bg-clay shrink-0 mt-1.5" aria-hidden />
                     <span className="text-sm text-ink leading-snug">
                       {VIBE_CHECKLIST[tag.slug] ?? tag.label_ja}
                     </span>
@@ -278,7 +262,7 @@ export default async function StorePage({
         )}
 
         {/* 6. アクションボタン */}
-        <section className="space-y-2.5 pb-8">
+        <section className="space-y-2.5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
           {links?.google_maps && (
             <a
               href={links.google_maps}

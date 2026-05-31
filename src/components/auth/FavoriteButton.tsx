@@ -130,31 +130,36 @@ export default function FavoriteButton({
     onActionComplete?.();
   };
 
-  const containerSize = size === "sm" ? "w-7 h-7" : "w-9 h-9";
+  const visualSize = size === "sm" ? "w-7 h-7" : "w-9 h-9";
   const iconSize = size === "sm" ? 14 : 18;
 
   return (
     <>
+      {/* w-11 h-11 (44px) transparent tap area; visual circle is inner div */}
       <button
         onClick={handleClick}
         disabled={loading}
-        className={`flex items-center justify-center ${containerSize} rounded-full bg-white/80 backdrop-blur-sm shadow-sm active:opacity-70 disabled:opacity-40`}
-        style={isPopped ? { animation: "heart-pop 0.35s ease-out" } : undefined}
+        className="flex items-center justify-center w-11 h-11 active:opacity-70 disabled:opacity-40"
         aria-label={favorited ? "お気に入りから削除" : "お気に入りに追加"}
       >
-        <svg
-          width={iconSize}
-          height={iconSize}
-          viewBox="0 0 20 20"
-          fill={favorited ? "#D4714A" : "none"}
+        <div
+          className={`flex items-center justify-center ${visualSize} rounded-full bg-white/80 backdrop-blur-sm shadow-sm`}
+          style={isPopped ? { animation: "heart-pop 0.35s ease-out" } : undefined}
         >
-          <path
-            d="M10 17S3 12.5 3 8a4 4 0 018 0 4 4 0 018 0c0 4.5-7 9-7 9z"
-            stroke={favorited ? "#D4714A" : "#1A1816"}
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-        </svg>
+          <svg
+            width={iconSize}
+            height={iconSize}
+            viewBox="0 0 20 20"
+            fill={favorited ? "#D4714A" : "none"}
+          >
+            <path
+              d="M10 17S3 12.5 3 8a4 4 0 018 0 4 4 0 018 0c0 4.5-7 9-7 9z"
+              stroke={favorited ? "#D4714A" : "#1A1816"}
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
       </button>
 
       <LoginModal

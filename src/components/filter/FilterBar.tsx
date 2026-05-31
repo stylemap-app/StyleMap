@@ -21,7 +21,8 @@ export default function FilterBar({
   onOpenSheet,
 }: Props) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-paper border-b border-gray-100 overflow-x-auto">
+    <div className="overflow-x-auto bg-paper border-b border-gray-100">
+      <div className="flex items-center gap-2 px-3 py-2 w-max min-w-full">
       <div className="flex items-center gap-2 flex-none">
         {QUICK_VIBES.map(({ slug, label }) => {
           const active = filter.vibes.includes(slug);
@@ -29,7 +30,7 @@ export default function FilterBar({
             <button
               key={slug}
               onClick={() => onToggleVibe(slug)}
-              className={`h-8 px-3.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`h-10 px-3.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                 active
                   ? "bg-clay text-paper"
                   : "bg-white border border-gray-300 text-ink"
@@ -45,7 +46,7 @@ export default function FilterBar({
 
       <button
         onClick={onOpenSheet}
-        className="flex-none flex items-center gap-1.5 h-8 px-3.5 rounded-full bg-white border border-gray-300 text-ink text-xs font-medium whitespace-nowrap relative"
+        className="flex-none flex items-center gap-1.5 h-10 px-3.5 rounded-full bg-white border border-gray-300 text-ink text-xs font-medium whitespace-nowrap relative"
       >
         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path
@@ -62,6 +63,7 @@ export default function FilterBar({
           </span>
         )}
       </button>
+      </div>
     </div>
   );
 }

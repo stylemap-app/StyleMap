@@ -80,7 +80,7 @@ export default function MapView({
       </div>
 
       {/* カルーセルエリア：20% */}
-      <div className="flex-[1] min-h-[120px] bg-paper flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory">
+      <div className="flex-[1] min-h-[120px] bg-paper flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory scroll-pl-4">
         {stores.map((store) => {
           const mainPhoto =
             store.store_photos.find((p) => p.is_main) ??

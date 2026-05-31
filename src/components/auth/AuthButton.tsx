@@ -79,7 +79,7 @@ export default function AuthButton() {
       {/* アバターボタン */}
       <button
         onClick={() => setMenuOpen((prev) => !prev)}
-        className="w-8 h-8 rounded-full overflow-hidden bg-clay/20 flex items-center justify-center shrink-0 active:opacity-70"
+        className="w-9 h-9 rounded-full overflow-hidden bg-clay/20 flex items-center justify-center shrink-0 active:opacity-70"
         aria-label={`${name ?? "ユーザー"}のメニューを開く`}
         aria-expanded={menuOpen}
       >

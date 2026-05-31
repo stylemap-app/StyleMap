@@ -77,7 +77,7 @@ export default function FilterSheet({
           <h2 className="text-[15px] font-bold text-ink">絞り込み</h2>
           <button
             onClick={handleReset}
-            className="text-xs text-gray-500 underline-offset-2 underline active:opacity-60"
+            className="min-h-[44px] px-3 flex items-center text-xs text-gray-500 underline-offset-2 underline active:opacity-60"
           >
             リセット
           </button>

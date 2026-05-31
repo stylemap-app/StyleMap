@@ -114,7 +114,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
             <div key={list.id} className="flex items-center shrink-0 gap-0.5">
               <button
                 onClick={() => setSelectedListId(list.id)}
-                className={`h-8 px-3 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`h-10 px-3 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? "bg-ink text-paper"
                     : "bg-gray-100 text-gray-500 active:bg-gray-200"
@@ -125,7 +125,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
               {isActive && (
                 <button
                   onClick={() => setEditingList(list)}
-                  className="w-7 h-7 flex items-center justify-center text-gray-400 active:opacity-60 shrink-0"
+                  className="w-10 h-10 flex items-center justify-center text-gray-400 active:opacity-60 shrink-0"
                   aria-label="リストを編集"
                 >
                   <svg
@@ -145,7 +145,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
         })}
         <button
           onClick={() => setShowCreateModal(true)}
-          className="shrink-0 h-8 px-3 rounded-full text-sm font-medium text-clay border border-clay/50 whitespace-nowrap active:bg-clay/10"
+          className="shrink-0 h-10 px-3 rounded-full text-sm font-medium text-clay border border-clay/50 whitespace-nowrap active:bg-clay/10"
         >
           + 新しいリスト
         </button>
@@ -155,21 +155,29 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
       {/* 店舗グリッド */}
       <div className="px-4 py-4">
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-clay rounded-full animate-spin" />
+          <div className="grid grid-cols-2 gap-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-card overflow-hidden bg-white shadow-card animate-pulse">
+                <div className="w-full aspect-[4/3] bg-gray-200" />
+                <div className="px-2.5 py-2 space-y-1.5">
+                  <div className="h-3 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-200 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : stores.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             <p className="text-sm text-gray-400">まだお気に入りがありません</p>
             <Link
               href="/"
-              className="h-10 px-5 rounded-button bg-ink text-paper text-sm font-medium flex items-center active:opacity-80"
+              className="h-11 px-5 rounded-button bg-ink text-paper text-sm font-medium flex items-center active:opacity-80"
             >
               マップに戻る
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pb-8">
+          <div className="grid grid-cols-2 gap-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
             {stores.map((store) => (
               <FavoriteStoreCard
                 key={store.id}
