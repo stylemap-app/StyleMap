@@ -2,7 +2,17 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import MapView from "@/components/map/MapView";
+import dynamic from "next/dynamic";
+
+// @vis.gl/react-google-maps を遅延読み込み → 初回バンドルから除外
+const MapView = dynamic(() => import("@/components/map/MapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center bg-paper">
+      <div className="w-6 h-6 border-2 border-gray-200 border-t-clay rounded-full animate-spin" />
+    </div>
+  ),
+});
 import ListView from "@/components/store/ListView";
 import ViewTabs from "./ViewTabs";
 import FilterBar from "@/components/filter/FilterBar";

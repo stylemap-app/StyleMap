@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import HeroCarousel from "@/components/store/HeroCarousel";
 import FavoriteButton from "@/components/auth/FavoriteButton";
@@ -46,6 +47,79 @@ const ENTRY_SCORE_SLUGS = [
 ];
 
 type Tag = { type: string; slug: string; label_ja: string };
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://stylemap.vercel.app";
+
+// 検索結果表示・SNS シェア用の動的メタタグ（page コンポーネントとは別に DB 取得）
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const supabase = createClient();
+  const { data: store } = await supabase
+    .from("stores")
+    .select(
+      "name, address, nearest_station, store_photos(url, is_main, sort_order), store_tags(tag_masters(type, label_ja))"
+    )
+    .eq("id", params.id)
+    .maybeSingle();
+
+  if (!store) return { title: "店舗が見つかりません" };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const styleTags = (store.store_tags ?? [])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((st: any) => st.tag_masters)
+    .filter(Boolean)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .filter((t: any) => t.type === "style")
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((t: any) => t.label_ja) as string[];
+
+  const descParts = [
+    styleTags.length > 0 ? styleTags.join("・") + "系" : null,
+    store.nearest_station ? `${store.nearest_station}エリア` : null,
+    store.address,
+  ].filter(Boolean);
+  const description =
+    descParts.join(" / ") ||
+    "StyleMap - 自分に合う服屋を見つける、ファッション特化型店舗検索マップ";
+
+  // メイン写真を OGP 画像に使用
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sortedPhotos = [...(store.store_photos ?? [])].sort((a: any, b: any) => {
+    if (a.is_main && !b.is_main) return -1;
+    if (!a.is_main && b.is_main) return 1;
+    return a.sort_order - b.sort_order;
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mainPhoto = sortedPhotos[0] as any;
+
+  const storeUrl = `${SITE_URL}/stores/${params.id}`;
+
+  return {
+    title: store.name,
+    description,
+    alternates: {
+      canonical: storeUrl,
+    },
+    openGraph: {
+      title: `${store.name} | StyleMap`,
+      description,
+      url: storeUrl,
+      type: "website",
+      images: mainPhoto ? [{ url: mainPhoto.url, width: 1200, height: 630 }] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${store.name} | StyleMap`,
+      description,
+      images: mainPhoto ? [mainPhoto.url] : [],
+    },
+  };
+}
 
 export default async function StorePage({
   params,
@@ -102,8 +176,26 @@ export default async function StorePage({
   const links = store.links as unknown as StoreLinks;
   const priceRange = store.price_range as PriceRange;
 
+  // LocalBusiness 構造化データ（Google リッチリザルト用）
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ClothingStore",
+    name: store.name,
+    address: store.address,
+    url: `${SITE_URL}/stores/${store.id}`,
+    ...(photos[0] && { image: photos.slice(0, 3).map((p) => p.url) }),
+    ...(store.nearest_station && {
+      description: `${store.nearest_station}エリアの服屋`,
+    }),
+  };
+
   return (
     <div className="min-h-[100dvh] bg-paper">
+      {/* LocalBusiness 構造化データ */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ヘッダー */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 h-12 bg-paper/90 backdrop-blur-sm border-b border-gray-100">
         <Link

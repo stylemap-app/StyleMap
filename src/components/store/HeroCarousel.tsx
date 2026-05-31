@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 
 type Photo = {
   id: string;
@@ -39,13 +40,15 @@ export default function HeroCarousel({
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {photos.map((photo, i) => (
-          <div key={photo.id} className="flex-none w-full snap-start">
-            <img
+          // relative + 固定高で fill モードの Image を受け取る
+          <div key={photo.id} className="relative flex-none w-full snap-start" style={{ height: "280px" }}>
+            <Image
               src={photo.url}
               alt={`${storeName}${photo.caption ? ` - ${photo.caption}` : ""}`}
-              className="w-full object-cover"
-              style={{ height: "280px" }}
-              loading={i === 0 ? "eager" : "lazy"}
+              fill
+              className="object-cover"
+              sizes="100vw"
+              priority={i === 0}
             />
           </div>
         ))}

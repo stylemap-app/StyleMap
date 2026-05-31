@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -84,10 +85,12 @@ export default function AuthButton() {
         aria-expanded={menuOpen}
       >
         {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          // Google アバターは lh3.googleusercontent.com から配信（next.config に許可済み）
+          <Image
             src={avatarUrl}
             alt={name ?? "ユーザー"}
+            width={36}
+            height={36}
             className="w-full h-full object-cover"
           />
         ) : (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { PriceRange } from "@/types/store";
 import { VIBE_BADGE_LABEL } from "@/lib/vibes";
 import FavoriteButton from "@/components/auth/FavoriteButton";
@@ -47,12 +48,16 @@ export default function StoreListCard({
       {/* 写真エリア（ハートボタンをオーバーレイ） */}
       <div className="relative">
         {mainPhotoUrl ? (
-          <img
-            src={mainPhotoUrl}
-            alt={name}
-            className="w-full object-cover"
-            style={{ height: "160px" }}
-          />
+          // 160px の相対コンテナで fill Image を受け取る（モバイル1列 / sm 以上 2列）
+          <div className="relative w-full" style={{ height: "160px" }}>
+            <Image
+              src={mainPhotoUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, 50vw"
+            />
+          </div>
         ) : (
           <div className="w-full bg-gray-100" style={{ height: "160px" }} />
         )}

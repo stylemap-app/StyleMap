@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { PriceRange } from "@/types/store";
 import type { FavoriteStore } from "@/lib/favorites";
 import FavoriteButton from "@/components/auth/FavoriteButton";
@@ -20,12 +21,16 @@ export default function FavoriteStoreCard({ store, onActionComplete }: Props) {
     <div className="relative rounded-card overflow-hidden bg-white shadow-card">
       <Link href={`/stores/${store.id}`} className="flex flex-col">
         {store.mainPhotoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={store.mainPhotoUrl}
-            alt={store.name}
-            className="w-full aspect-[4/3] object-cover"
-          />
+          // aspect-[4/3] の相対コンテナで fill Image を受け取る（2列グリッド = 約50vw）
+          <div className="relative w-full aspect-[4/3]">
+            <Image
+              src={store.mainPhotoUrl}
+              alt={store.name}
+              fill
+              className="object-cover"
+              sizes="50vw"
+            />
+          </div>
         ) : (
           <div className="w-full aspect-[4/3] bg-gray-100" />
         )}

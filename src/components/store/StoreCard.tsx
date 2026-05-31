@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { PriceRange } from "@/types/store";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 
@@ -40,14 +41,18 @@ export default function StoreCard({
       {/* 写真エリア（ハートをオーバーレイ） */}
       <div className="relative">
         {mainPhotoUrl ? (
-          <img
-            src={mainPhotoUrl}
-            alt={name}
-            className="w-full h-[72px] object-cover"
-            style={{ height: "72px" }}
-          />
+          // h-[72px] の相対コンテナで fill Image を受け取る（カード幅 w-36=144px 固定）
+          <div className="relative h-[72px]">
+            <Image
+              src={mainPhotoUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="144px"
+            />
+          </div>
         ) : (
-          <div className="w-full h-[72px] bg-gray-100" />
+          <div className="h-[72px] bg-gray-100" />
         )}
         <div className="absolute top-1 right-1">
           <FavoriteButton
