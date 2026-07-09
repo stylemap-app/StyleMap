@@ -15,9 +15,14 @@ export default function AuthButton() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+      })
+      .catch(() => {
+        // Supabase 到達不能時はログアウト状態として表示
+        setUser(null);
+      });
 
     const {
       data: { subscription },

@@ -46,9 +46,10 @@ export default function MapView({
   }, []);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* 地図エリア：80% */}
-      <div className="flex-[4] min-h-0">
+    // relative コンテナがマップの全高を占め、カルーセルは絶対配置でオーバーレイ
+    <div className="relative h-full overflow-hidden">
+      {/* 地図：コンテナ全体を埋める */}
+      <div className="absolute inset-0">
         <APIProvider apiKey={API_KEY}>
           <Map
             defaultCenter={SHIMOKITAZAWA}
@@ -79,34 +80,41 @@ export default function MapView({
         </APIProvider>
       </div>
 
-      {/* カルーセルエリア：20% */}
-      <div className="flex-[1] min-h-[120px] bg-paper flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory scroll-pl-4">
-        {stores.map((store) => {
-          const mainPhoto =
-            store.store_photos.find((p) => p.is_main) ??
-            store.store_photos[0];
-          return (
-            <div
-              key={store.id}
-              ref={(el) => {
-                cardRefs.current[store.id] = el;
-              }}
-              className="snap-start shrink-0 h-[calc(100%-16px)]"
-            >
-              <StoreCard
-                id={store.id}
-                name={store.name}
-                priceRange={store.price_range}
-                mainPhotoUrl={mainPhoto?.url}
-                isSelected={selectedId === store.id}
-                entryScore={calcEntryScore(store.store_tags ?? [])}
-                isFavorited={favoritedIds.includes(store.id)}
-                onFavoriteToggle={onFavoriteToggle}
-              />
-            </div>
-          );
-        })}
-      </div>
+      {/* カルーセル：マップ下部にオーバーレイ（店舗あり時のみ表示） */}
+      {stores.length > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 bg-paper/95 backdrop-blur-sm">
+          <div
+            className="flex items-center gap-3 px-4 overflow-x-auto snap-x snap-mandatory scroll-pl-4"
+            style={{ height: "128px" }}
+          >
+            {stores.map((store) => {
+              const mainPhoto =
+                store.store_photos.find((p) => p.is_main) ??
+                store.store_photos[0];
+              return (
+                <div
+                  key={store.id}
+                  ref={(el) => {
+                    cardRefs.current[store.id] = el;
+                  }}
+                  className="snap-start shrink-0 h-[calc(100%-16px)]"
+                >
+                  <StoreCard
+                    id={store.id}
+                    name={store.name}
+                    priceRange={store.price_range}
+                    mainPhotoUrl={mainPhoto?.url}
+                    isSelected={selectedId === store.id}
+                    entryScore={calcEntryScore(store.store_tags ?? [])}
+                    isFavorited={favoritedIds.includes(store.id)}
+                    onFavoriteToggle={onFavoriteToggle}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

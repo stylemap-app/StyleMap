@@ -155,7 +155,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
       {/* 店舗グリッド */}
       <div className="px-4 py-4">
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+          <div className="grid grid-cols-2 gap-3 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="rounded-card overflow-hidden bg-white shadow-card animate-pulse">
                 <div className="w-full aspect-[4/3] bg-gray-200" />
@@ -177,7 +177,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+          <div className="grid grid-cols-2 gap-3 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
             {stores.map((store) => (
               <FavoriteStoreCard
                 key={store.id}

@@ -26,7 +26,12 @@ export async function middleware(request: NextRequest) {
   );
 
   // セッションを自動リフレッシュ。Server Components が最新ユーザー情報を読めるようにする
-  await supabase.auth.getUser();
+  // Supabase が一時的に到達不能でもミドルウェアがクラッシュしないよう try/catch
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // ネットワークエラー時はそのまま続行（未認証として扱う）
+  }
 
   return supabaseResponse;
 }

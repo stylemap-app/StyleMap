@@ -15,7 +15,10 @@ export default function FavoritesLoginPrompt() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-paper flex flex-col">
+    <div
+      className="min-h-[100dvh] bg-paper flex flex-col"
+      style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom))" }}
+    >
       <div className="sticky top-0 z-10 flex items-center px-4 h-12 bg-paper/90 backdrop-blur-sm border-b border-gray-100">
         <Link
           href="/"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_JP, DM_Mono } from "next/font/google";
 import Script from "next/script";
+import BottomNav from "@/components/layout/BottomNav";
 import "./globals.css";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
@@ -50,6 +51,7 @@ export default function RootLayout({
     <html lang="ja" className={`${noto.variable} ${dmMono.variable}`}>
       <body className="font-sans">
         {children}
+        <BottomNav />
         {GA_ID && (
           <>
             <Script

@@ -354,7 +354,7 @@ export default async function StorePage({
         )}
 
         {/* 6. アクションボタン */}
-        <section className="space-y-2.5 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <section className="space-y-2.5 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
           {links?.google_maps && (
             <a
               href={links.google_maps}

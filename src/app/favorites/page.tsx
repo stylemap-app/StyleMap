@@ -5,9 +5,14 @@ import FavoritesLoginPrompt from "./FavoritesLoginPrompt";
 
 export default async function FavoritesPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+
+  let user = null;
+  try {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  } catch {
+    // Supabase 到達不能時は未ログインとして扱う
+  }
 
   if (!user) {
     return <FavoritesLoginPrompt />;
