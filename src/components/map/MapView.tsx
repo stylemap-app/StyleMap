@@ -19,7 +19,7 @@ export type StoreForMap = {
   }[];
 };
 
-const SHIMOKITAZAWA = { lat: 35.6613, lng: 139.668 };
+const DEFAULT_CENTER = { lat: 35.6613, lng: 139.668 };
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 type Props = {
@@ -27,12 +27,16 @@ type Props = {
   activeVibeSlugs?: string[];
   favoritedIds?: string[];
   onFavoriteToggle?: (storeId: string, isFavorited: boolean) => void;
+  center?: { lat: number; lng: number };
+  zoom?: number;
 };
 
 export default function MapView({
   stores,
   favoritedIds = [],
   onFavoriteToggle,
+  center = DEFAULT_CENTER,
+  zoom = 16,
 }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -52,8 +56,8 @@ export default function MapView({
       <div className="absolute inset-0">
         <APIProvider apiKey={API_KEY}>
           <Map
-            defaultCenter={SHIMOKITAZAWA}
-            defaultZoom={16}
+            defaultCenter={center}
+            defaultZoom={zoom}
             mapId="DEMO_MAP_ID"
             gestureHandling="greedy"
             disableDefaultUI

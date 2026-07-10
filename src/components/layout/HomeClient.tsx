@@ -19,6 +19,7 @@ import FilterBar from "@/components/filter/FilterBar";
 import FilterSheet from "@/components/filter/FilterSheet";
 import EmptyState from "@/components/store/EmptyState";
 import AuthButton from "@/components/auth/AuthButton";
+import AreaSelectScreen from "./AreaSelectScreen";
 import { useFilterState } from "@/hooks/useFilterState";
 import {
   applyFilters,
@@ -31,6 +32,7 @@ import { getUserFavoritedStoreIds } from "@/lib/favorites";
 import type { StoreForMap } from "@/components/map/MapView";
 import type { View } from "./ViewTabs";
 import type { TagMaster } from "@/types/store";
+import type { Area } from "@/lib/areas";
 
 type SearchMode = "store" | "clothes";
 
@@ -38,12 +40,14 @@ type Props = {
   stores: StoreForMap[];
   defaultView: View;
   tagMasters: TagMaster[];
+  currentArea: Area;
 };
 
-export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
+export default function HomeClient({ stores, defaultView, tagMasters, currentArea }: Props) {
   const [searchMode, setSearchMode] = useState<SearchMode>("store");
   const [view, setView] = useState<View>(defaultView);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAreaSelectOpen, setIsAreaSelectOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [favoritedIds, setFavoritedIds] = useState<string[]>([]);
   const router = useRouter();
@@ -169,6 +173,8 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
             activeCount={activeFilterCount(filter)}
             onToggleVibe={handleToggleVibe}
             onOpenSheet={() => setIsSheetOpen(true)}
+            areaName={currentArea.name}
+            onOpenAreaSelect={() => setIsAreaSelectOpen(true)}
           />
 
           <div className="flex-1 min-h-0 overflow-hidden">
@@ -180,10 +186,13 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
               />
             ) : view === "map" ? (
               <MapView
+                key={currentArea.slug}
                 stores={displayStores}
                 activeVibeSlugs={filter.vibes}
                 favoritedIds={favoritedIds}
                 onFavoriteToggle={handleFavoriteToggle}
+                center={{ lat: currentArea.lat, lng: currentArea.lng }}
+                zoom={currentArea.zoom}
               />
             ) : (
               <ListView
@@ -208,6 +217,13 @@ export default function HomeClient({ stores, defaultView, tagMasters }: Props) {
           </svg>
           <p className="text-sm">服を探す機能は準備中です</p>
         </div>
+      )}
+
+      {isAreaSelectOpen && (
+        <AreaSelectScreen
+          currentAreaSlug={currentArea.slug}
+          onClose={() => setIsAreaSelectOpen(false)}
+        />
       )}
 
       <FilterSheet
