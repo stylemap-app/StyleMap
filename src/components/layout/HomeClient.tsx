@@ -16,7 +16,7 @@ const MapView = dynamic(() => import("@/components/map/MapView"), {
 import ListView from "@/components/store/ListView";
 import ViewTabs from "./ViewTabs";
 import FilterBar from "@/components/filter/FilterBar";
-import FilterSheet from "@/components/filter/FilterSheet";
+import FilterScreen from "@/components/filter/FilterScreen";
 import EmptyState from "@/components/store/EmptyState";
 import AuthButton from "@/components/auth/AuthButton";
 import AreaSelectScreen from "./AreaSelectScreen";
@@ -226,7 +226,7 @@ export default function HomeClient({ stores, defaultView, tagMasters, currentAre
         />
       )}
 
-      <FilterSheet
+      <FilterScreen
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
         onApply={handleApplyFilter}
