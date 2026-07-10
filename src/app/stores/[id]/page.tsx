@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import HeroCarousel from "@/components/store/HeroCarousel";
+import ClothesCarousel from "@/components/store/ClothesCarousel";
+import HoursSection from "@/components/store/HoursSection";
 import FavoriteButton from "@/components/auth/FavoriteButton";
+import BackButton from "@/components/layout/BackButton";
 import type { PriceRange, StoreHours, StoreLinks, TagType } from "@/types/store";
 
 const PRICE_SYMBOLS: Record<PriceRange, string> = {
@@ -19,8 +21,6 @@ const PRICE_LABELS: Record<PriceRange, string> = {
   3: "¥8,000〜¥20,000",
   4: "¥20,000〜",
 };
-
-const DAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"];
 
 const VIBE_CHECKLIST: Record<string, string> = {
   "easy-solo":          "一人でふらっと入れる",
@@ -51,7 +51,6 @@ type Tag = { type: string; slug: string; label_ja: string };
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://stylemap.vercel.app";
 
-// 検索結果表示・SNS シェア用の動的メタタグ（page コンポーネントとは別に DB 取得）
 export async function generateMetadata({
   params,
 }: {
@@ -87,7 +86,6 @@ export async function generateMetadata({
     descParts.join(" / ") ||
     "StyleMap - 自分に合う服屋を見つける、ファッション特化型店舗検索マップ";
 
-  // メイン写真を OGP 画像に使用
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sortedPhotos = [...(store.store_photos ?? [])].sort((a: any, b: any) => {
     if (a.is_main && !b.is_main) return -1;
@@ -96,15 +94,12 @@ export async function generateMetadata({
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mainPhoto = sortedPhotos[0] as any;
-
   const storeUrl = `${SITE_URL}/stores/${params.id}`;
 
   return {
     title: store.name,
     description,
-    alternates: {
-      canonical: storeUrl,
-    },
+    alternates: { canonical: storeUrl },
     openGraph: {
       title: `${store.name} | StyleMap`,
       description,
@@ -132,7 +127,7 @@ export default async function StorePage({
     supabase
       .from("stores")
       .select(
-        "id, name, name_kana, address, nearest_station, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
+        "id, name, name_kana, address, nearest_station, lat, lng, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
       )
       .eq("id", params.id)
       .maybeSingle(),
@@ -163,8 +158,8 @@ export default async function StorePage({
     .filter(Boolean);
 
   const byType = (type: TagType) => allTags.filter((t) => t.type === type);
-  const styleTags = byType("style");
-  const vibeTags = byType("vibe");
+  const styleTags  = byType("style");
+  const vibeTags   = byType("vibe");
   const genderTags = byType("gender");
   const ageGroupTags = byType("age_group");
 
@@ -176,7 +171,8 @@ export default async function StorePage({
   const links = store.links as unknown as StoreLinks;
   const priceRange = store.price_range as PriceRange;
 
-  // LocalBusiness 構造化データ（Google リッチリザルト用）
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}`;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
@@ -191,61 +187,74 @@ export default async function StorePage({
 
   return (
     <div className="min-h-[100dvh] bg-paper">
-      {/* LocalBusiness 構造化データ */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* ヘッダー */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 h-12 bg-paper/90 backdrop-blur-sm border-b border-gray-100">
-        <Link
-          href="/"
-          className="flex items-center gap-1.5 text-ink active:opacity-60"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path
-              d="M12 4L6 10L12 16"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span className="text-sm">戻る</span>
-        </Link>
-        <FavoriteButton storeId={store.id} initialFavorited={initialFavorited} />
+
+      {/* スティッキーヘッダー（戻るボタンのみ） */}
+      <div className="sticky top-0 z-10 flex items-center px-4 h-12 bg-paper/90 backdrop-blur-sm border-b border-gray-100">
+        <BackButton />
       </div>
 
-      {/* ヒーロー画像 */}
+      {/* ① ヒーロー写真カルーセル */}
       <HeroCarousel photos={photos} storeName={store.name} />
 
-      {/* メインコンテンツ */}
       <div className="px-4 py-5 space-y-6">
 
-        {/* 1. 店名・系統タグ・価格帯 */}
-        <section>
-          <h1 className="text-[22px] font-bold text-ink leading-tight">
-            {store.name}
-          </h1>
-          {store.name_kana && (
-            <p className="text-xs text-gray-500 mt-0.5">{store.name_kana}</p>
-          )}
-          <div className="flex flex-wrap gap-1.5 mt-3">
-            {styleTags.map((tag) => (
-              <span
-                key={tag.slug}
-                className="text-xs bg-clay/15 text-clay px-2.5 py-1 rounded-full font-medium"
-              >
-                {tag.label_ja}
-              </span>
-            ))}
-            <span className="text-xs bg-ink text-paper px-2.5 py-1 rounded-full font-price">
-              {PRICE_SYMBOLS[priceRange]}&ensp;{PRICE_LABELS[priceRange]}
-            </span>
+        {/* ② 店名 ＋ ハートボタン */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-[22px] font-bold text-ink leading-tight">
+              {store.name}
+            </h1>
+            {store.name_kana && (
+              <p className="text-xs text-gray-500 mt-0.5">{store.name_kana}</p>
+            )}
           </div>
+          <FavoriteButton storeId={store.id} initialFavorited={initialFavorited} />
+        </div>
+
+        {/* ③ 特徴タグ ＋ 価格帯バッジ */}
+        <div className="flex flex-wrap gap-1.5 -mt-2">
+          {styleTags.map((tag) => (
+            <span
+              key={tag.slug}
+              className="text-xs bg-clay/15 text-clay px-2.5 py-1 rounded-full font-medium"
+            >
+              {tag.label_ja}
+            </span>
+          ))}
+          <span className="text-xs bg-ink text-paper px-2.5 py-1 rounded-full font-price">
+            {PRICE_SYMBOLS[priceRange]}&ensp;{PRICE_LABELS[priceRange]}
+          </span>
+        </div>
+
+        {/* ④ 服写真カルーセル（フェーズ11用プレースホルダー） */}
+        <section>
+          <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-3">
+            服一覧
+          </h2>
+          <ClothesCarousel photos={photos} storeName={store.name} />
         </section>
 
-        {/* 2. 入店前チェック */}
+        {/* ⑤ 住所 */}
+        <section>
+          <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-1.5">
+            住所
+          </h2>
+          <p className="text-sm text-ink">{store.address}</p>
+          <p className="text-xs text-gray-500 mt-1">
+            最寄駅：{store.nearest_station}
+          </p>
+        </section>
+
+        {/* ⑥ 営業時間（今日 → タップで全曜日展開） */}
+        <section className="rounded-card bg-white shadow-card p-4">
+          <HoursSection hours={hours} />
+        </section>
+
+        {/* ⑦ 入店前チェック */}
         {vibeTags.length > 0 && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -255,14 +264,16 @@ export default async function StorePage({
               <ul className="space-y-3">
                 {vibeTags.map((tag) => (
                   <li key={tag.slug} className="flex items-start gap-2.5">
-                    <div className="w-2 h-2 rounded-full bg-clay shrink-0 mt-1.5" aria-hidden />
+                    <div
+                      className="w-2 h-2 rounded-full bg-clay shrink-0 mt-1.5"
+                      aria-hidden
+                    />
                     <span className="text-sm text-ink leading-snug">
                       {VIBE_CHECKLIST[tag.slug] ?? tag.label_ja}
                     </span>
                   </li>
                 ))}
               </ul>
-
               {entryScore > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-[11px] font-medium text-gray-500 tracking-label uppercase">
@@ -284,43 +295,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* 3. 営業時間・住所 */}
-        <section className="rounded-card bg-white shadow-card p-4 space-y-5">
-          <div>
-            <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2.5">
-              営業時間
-            </h2>
-            <div className="space-y-1.5">
-              {hours?.regular?.map((day, i) => (
-                <div key={i} className="flex text-sm">
-                  <span className="w-5 shrink-0 text-gray-500">
-                    {DAY_NAMES[i]}
-                  </span>
-                  <span className="ml-4 text-ink">
-                    {day.open && day.close
-                      ? `${day.open} – ${day.close}`
-                      : "定休日"}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {hours?.note && (
-              <p className="text-xs text-gray-500 mt-2">{hours.note}</p>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-1.5">
-              住所
-            </h2>
-            <p className="text-sm text-ink">{store.address}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              最寄駅：{store.nearest_station}
-            </p>
-          </div>
-        </section>
-
-        {/* 4. 運営からの一言 */}
+        {/* ⑧ スタッフより一言 */}
         {store.operator_review && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -334,7 +309,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* 5. 主な客層 */}
+        {/* ⑨ 主な客層 */}
         {(genderTags.length > 0 || ageGroupTags.length > 0) && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -353,30 +328,31 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* 6. アクションボタン */}
+        {/* ⑩ 外部リンク ＋ 経路ボタン */}
         <section className="space-y-2.5 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
-          {links?.google_maps && (
-            <a
-              href={links.google_maps}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-12 rounded-button bg-ink text-paper text-sm font-medium active:opacity-80"
-            >
-              <MapIcon />
-              Googleマップで見る
-            </a>
-          )}
+          {/* 経路ボタン（Google Maps directions） */}
+          <a
+            href={directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full h-12 rounded-button bg-clay text-paper text-sm font-medium active:opacity-80"
+          >
+            <NavigationIcon />
+            経路を調べる
+          </a>
+
           {links?.instagram && (
             <a
               href={links.instagram}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-ink text-ink text-sm font-medium active:opacity-80"
+              className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
             >
               <InstagramIcon />
               Instagramを見る
             </a>
           )}
+
           {links?.official_site && (
             <a
               href={links.official_site}
@@ -395,12 +371,13 @@ export default async function StorePage({
   );
 }
 
-function MapIcon() {
+function NavigationIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <path
-        d="M8 1.5C5.51 1.5 3.5 3.51 3.5 6c0 3.25 4.5 8.5 4.5 8.5S12.5 9.25 12.5 6c0-2.49-2.01-4.5-4.5-4.5zm0 6a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"
+        d="M8 1.5l5.5 13L8 11 2.5 14.5 8 1.5z"
         fill="currentColor"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -409,15 +386,8 @@ function MapIcon() {
 function InstagramIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-      <rect
-        x="2"
-        y="2"
-        width="12"
-        height="12"
-        rx="3"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
+      <rect x="2" y="2" width="12" height="12" rx="3"
+        stroke="currentColor" strokeWidth="1.3" />
       <circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.3" />
       <circle cx="11.5" cy="4.5" r="0.75" fill="currentColor" />
     </svg>
@@ -428,14 +398,7 @@ function GlobeIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.3" />
-      <ellipse
-        cx="8"
-        cy="8"
-        rx="2.5"
-        ry="6"
-        stroke="currentColor"
-        strokeWidth="1.3"
-      />
+      <ellipse cx="8" cy="8" rx="2.5" ry="6" stroke="currentColor" strokeWidth="1.3" />
       <path d="M2 8h12" stroke="currentColor" strokeWidth="1.3" />
     </svg>
   );
