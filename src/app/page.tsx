@@ -25,17 +25,30 @@ export default async function Home({
     .eq("is_published", true)
     .order("name");
 
-  const [{ data: storeData, error }, { data: tagData }] = await Promise.all([
-    areaId ? storeQueryBase.eq("area_id", areaId) : storeQueryBase,
-    supabase
-      .from("tag_masters")
-      .select("id, type, slug, label_ja, sort_order")
-      .in("type", ["style", "vibe", "gender"])
-      .order("type")
-      .order("sort_order"),
-  ]);
+  const [{ data: storeData, error }, { data: tagData }, { data: reviewRows }] =
+    await Promise.all([
+      areaId ? storeQueryBase.eq("area_id", areaId) : storeQueryBase,
+      supabase
+        .from("tag_masters")
+        .select("id, type, slug, label_ja, sort_order")
+        .in("type", ["style", "vibe", "gender"])
+        .order("type")
+        .order("sort_order"),
+      supabase.from("reviews").select("store_id, rating"),
+    ]);
 
   if (error) console.error("Supabase fetch error:", error.message);
+
+  type RatingEntry = { avg: number; count: number };
+  const ratingMap: Record<string, RatingEntry> = {};
+  for (const row of reviewRows ?? []) {
+    if (!ratingMap[row.store_id]) ratingMap[row.store_id] = { avg: 0, count: 0 };
+    ratingMap[row.store_id].count += 1;
+    ratingMap[row.store_id].avg += row.rating;
+  }
+  for (const storeId in ratingMap) {
+    ratingMap[storeId].avg = ratingMap[storeId].avg / ratingMap[storeId].count;
+  }
 
   const defaultView: View = searchParams.view === "list" ? "list" : "map";
 
@@ -46,6 +59,7 @@ export default async function Home({
         defaultView={defaultView}
         tagMasters={(tagData ?? []) as unknown as TagMaster[]}
         currentArea={currentArea}
+        ratingMap={ratingMap}
       />
     </Suspense>
   );

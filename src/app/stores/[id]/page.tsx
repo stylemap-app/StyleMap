@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import HeroCarousel from "@/components/store/HeroCarousel";
 import ClothesCarousel from "@/components/store/ClothesCarousel";
 import HoursSection from "@/components/store/HoursSection";
+import ReviewSection from "@/components/store/ReviewSection";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 import BackButton from "@/components/layout/BackButton";
 import type { PriceRange, StoreHours, StoreLinks, TagType } from "@/types/store";
@@ -145,6 +146,20 @@ export default async function StorePage({
       .eq("store_id", store.id);
     initialFavorited = (count ?? 0) > 0;
   }
+
+  const { data: reviewsData } = await supabase
+    .from("reviews")
+    .select("id, rating, comment, created_at, user_id")
+    .eq("store_id", store.id)
+    .order("created_at", { ascending: false });
+
+  const allReviews = reviewsData ?? [];
+  const reviewCount = allReviews.length;
+  const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+  const displayReviews = allReviews.slice(0, 5);
+  const currentUserReview = user
+    ? (allReviews.find((r) => r.user_id === user.id) ?? null)
+    : null;
 
   const photos = [...(store.store_photos ?? [])].sort((a, b) => {
     if (a.is_main && !b.is_main) return -1;
@@ -295,7 +310,17 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑧ スタッフより一言 */}
+        {/* ⑧ レビュー */}
+        <ReviewSection
+          storeId={store.id}
+          initialReviews={displayReviews}
+          initialTotalRating={totalRating}
+          initialReviewCount={reviewCount}
+          currentUserId={user?.id ?? null}
+          currentUserReview={currentUserReview}
+        />
+
+        {/* ⑨ スタッフより一言 */}
         {store.operator_review && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -309,7 +334,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑨ 主な客層 */}
+        {/* ⑩ 主な客層 */}
         {(genderTags.length > 0 || ageGroupTags.length > 0) && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -328,7 +353,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑩ 外部リンク ＋ 経路ボタン */}
+        {/* ⑪ 外部リンク ＋ 経路ボタン */}
         <section className="space-y-2.5 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
           {/* 経路ボタン（Google Maps directions） */}
           <a

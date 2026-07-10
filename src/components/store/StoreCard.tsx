@@ -17,6 +17,7 @@ type Props = {
   mainPhotoUrl?: string;
   isSelected?: boolean;
   entryScore: number;
+  avgRating?: number;
   isFavorited?: boolean;
   onFavoriteToggle?: (storeId: string, isFavorited: boolean) => void;
 };
@@ -28,6 +29,7 @@ export default function StoreCard({
   mainPhotoUrl,
   isSelected,
   entryScore,
+  avgRating,
   isFavorited = false,
   onFavoriteToggle,
 }: Props) {
@@ -68,7 +70,11 @@ export default function StoreCard({
           <p className="font-price text-[10px] text-gray-500">
             {PRICE_SYMBOLS[priceRange]}
           </p>
-          {entryScore > 0 && (
+          {avgRating && avgRating > 0 ? (
+            <span className="text-[10px] text-clay font-medium">
+              ★ {avgRating.toFixed(1)}
+            </span>
+          ) : entryScore > 0 ? (
             <div
               className="flex items-center gap-[2px]"
               aria-label={`入りやすさ ${entryScore}/5`}
@@ -82,7 +88,7 @@ export default function StoreCard({
                 />
               ))}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </Link>

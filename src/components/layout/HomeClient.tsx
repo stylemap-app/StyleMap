@@ -36,14 +36,17 @@ import type { Area } from "@/lib/areas";
 
 type SearchMode = "store" | "clothes";
 
+type RatingEntry = { avg: number; count: number };
+
 type Props = {
   stores: StoreForMap[];
   defaultView: View;
   tagMasters: TagMaster[];
   currentArea: Area;
+  ratingMap: Record<string, RatingEntry>;
 };
 
-export default function HomeClient({ stores, defaultView, tagMasters, currentArea }: Props) {
+export default function HomeClient({ stores, defaultView, tagMasters, currentArea, ratingMap }: Props) {
   const [searchMode, setSearchMode] = useState<SearchMode>("store");
   const [view, setView] = useState<View>(defaultView);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -193,6 +196,7 @@ export default function HomeClient({ stores, defaultView, tagMasters, currentAre
                 onFavoriteToggle={handleFavoriteToggle}
                 center={{ lat: currentArea.lat, lng: currentArea.lng }}
                 zoom={currentArea.zoom}
+                ratingMap={ratingMap}
               />
             ) : (
               <ListView
@@ -200,6 +204,7 @@ export default function HomeClient({ stores, defaultView, tagMasters, currentAre
                 activeVibeSlugs={filter.vibes}
                 favoritedIds={favoritedIds}
                 onFavoriteToggle={handleFavoriteToggle}
+                ratingMap={ratingMap}
               />
             )}
           </div>

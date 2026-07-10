@@ -22,6 +22,8 @@ export type StoreForMap = {
 const DEFAULT_CENTER = { lat: 35.6613, lng: 139.668 };
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
+type RatingEntry = { avg: number; count: number };
+
 type Props = {
   stores: StoreForMap[];
   activeVibeSlugs?: string[];
@@ -29,6 +31,7 @@ type Props = {
   onFavoriteToggle?: (storeId: string, isFavorited: boolean) => void;
   center?: { lat: number; lng: number };
   zoom?: number;
+  ratingMap?: Record<string, RatingEntry>;
 };
 
 export default function MapView({
@@ -37,6 +40,7 @@ export default function MapView({
   onFavoriteToggle,
   center = DEFAULT_CENTER,
   zoom = 16,
+  ratingMap = {},
 }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -110,6 +114,7 @@ export default function MapView({
                     mainPhotoUrl={mainPhoto?.url}
                     isSelected={selectedId === store.id}
                     entryScore={calcEntryScore(store.store_tags ?? [])}
+                    avgRating={ratingMap[store.id]?.avg}
                     isFavorited={favoritedIds.includes(store.id)}
                     onFavoriteToggle={onFavoriteToggle}
                   />

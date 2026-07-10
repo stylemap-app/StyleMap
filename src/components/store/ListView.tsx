@@ -13,11 +13,14 @@ function calcWalkingMinutes(lat: number, lng: number): number {
   return Math.max(1, Math.ceil(distance / 80));
 }
 
+type RatingEntry = { avg: number; count: number };
+
 type Props = {
   stores: StoreForMap[];
   activeVibeSlugs: string[];
   favoritedIds: string[];
   onFavoriteToggle: (storeId: string, isFavorited: boolean) => void;
+  ratingMap?: Record<string, RatingEntry>;
 };
 
 export default function ListView({
@@ -25,6 +28,7 @@ export default function ListView({
   activeVibeSlugs,
   favoritedIds,
   onFavoriteToggle,
+  ratingMap = {},
 }: Props) {
   return (
     <div className="h-full overflow-y-auto overscroll-contain bg-paper">
@@ -54,6 +58,7 @@ export default function ListView({
               entryScore={calcEntryScore(storeTags)}
               vibeBadges={getVibeBadges(storeTags)}
               activeVibeSlugs={activeVibeSlugs}
+              avgRating={ratingMap[store.id]?.avg}
               isFavorited={favoritedIds.includes(store.id)}
               onFavoriteToggle={onFavoriteToggle}
             />

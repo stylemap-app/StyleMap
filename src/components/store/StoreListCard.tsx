@@ -21,6 +21,7 @@ type Props = {
   entryScore: number;
   vibeBadges: string[];
   activeVibeSlugs: string[];
+  avgRating?: number;
   isFavorited: boolean;
   onFavoriteToggle: (storeId: string, isFavorited: boolean) => void;
 };
@@ -35,6 +36,7 @@ export default function StoreListCard({
   entryScore,
   vibeBadges,
   activeVibeSlugs,
+  avgRating,
   isFavorited,
   onFavoriteToggle,
 }: Props) {
@@ -129,7 +131,14 @@ export default function StoreListCard({
           <span className="font-price text-xs text-gray-500">
             {PRICE_SYMBOLS[priceRange]}
           </span>
-          <span className="text-xs text-gray-500">徒歩約{walkingMinutes}分</span>
+          <div className="flex items-center gap-2">
+            {avgRating && avgRating > 0 && (
+              <span className="text-xs text-clay font-medium">
+                ★ {avgRating.toFixed(1)}
+              </span>
+            )}
+            <span className="text-xs text-gray-500">徒歩約{walkingMinutes}分</span>
+          </div>
         </div>
       </div>
     </Link>
