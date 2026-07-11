@@ -155,17 +155,16 @@ export default function ReviewSection({
         <p className="text-sm text-gray-400 mb-4">まだレビューがありません</p>
       )}
 
-      {showLoginNotice ? (
-        <p className="text-xs text-center text-gray-500 py-2 bg-gray-50 rounded-xl">
+      <button
+        onClick={handleOpenReview}
+        className="w-full h-10 rounded-button border border-clay text-clay text-sm font-medium active:opacity-70 transition-opacity"
+      >
+        {myReview ? "レビューを編集する" : "レビューを書く"}
+      </button>
+      {showLoginNotice && (
+        <p className="text-xs text-center text-gray-500 mt-2 py-1.5 bg-gray-50 rounded-xl">
           レビューを書くには<strong className="font-medium">ログイン</strong>が必要です
         </p>
-      ) : (
-        <button
-          onClick={handleOpenReview}
-          className="w-full h-10 rounded-button border border-clay text-clay text-sm font-medium active:opacity-70 transition-opacity"
-        >
-          {myReview ? "レビューを編集する" : "レビューを書く"}
-        </button>
       )}
 
       {isModalOpen && (

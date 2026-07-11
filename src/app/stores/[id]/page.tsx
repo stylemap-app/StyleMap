@@ -310,17 +310,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑧ レビュー */}
-        <ReviewSection
-          storeId={store.id}
-          initialReviews={displayReviews}
-          initialTotalRating={totalRating}
-          initialReviewCount={reviewCount}
-          currentUserId={user?.id ?? null}
-          currentUserReview={currentUserReview}
-        />
-
-        {/* ⑨ スタッフより一言 */}
+        {/* ⑧ スタッフより一言 */}
         {store.operator_review && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -334,7 +324,7 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑩ 主な客層 */}
+        {/* ⑨ 主な客層 */}
         {(genderTags.length > 0 || ageGroupTags.length > 0) && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
@@ -353,9 +343,46 @@ export default async function StorePage({
           </section>
         )}
 
-        {/* ⑪ 外部リンク ＋ 経路ボタン */}
-        <section className="space-y-2.5 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
-          {/* 経路ボタン（Google Maps directions） */}
+        {/* ⑩ レビュー */}
+        <ReviewSection
+          storeId={store.id}
+          initialReviews={displayReviews}
+          initialTotalRating={totalRating}
+          initialReviewCount={reviewCount}
+          currentUserId={user?.id ?? null}
+          currentUserReview={currentUserReview}
+        />
+
+        {/* ⑪ 外部リンク（Instagram・公式サイト） */}
+        {(links?.instagram || links?.official_site) && (
+          <section className="space-y-2.5">
+            {links.instagram && (
+              <a
+                href={links.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
+              >
+                <InstagramIcon />
+                Instagramを見る
+              </a>
+            )}
+            {links.official_site && (
+              <a
+                href={links.official_site}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
+              >
+                <GlobeIcon />
+                公式サイトを見る
+              </a>
+            )}
+          </section>
+        )}
+
+        {/* ⑫ 経路ボタン */}
+        <section className="pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
           <a
             href={directionsUrl}
             target="_blank"
@@ -365,30 +392,6 @@ export default async function StorePage({
             <NavigationIcon />
             経路を調べる
           </a>
-
-          {links?.instagram && (
-            <a
-              href={links.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
-            >
-              <InstagramIcon />
-              Instagramを見る
-            </a>
-          )}
-
-          {links?.official_site && (
-            <a
-              href={links.official_site}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
-            >
-              <GlobeIcon />
-              公式サイトを見る
-            </a>
-          )}
         </section>
 
       </div>
