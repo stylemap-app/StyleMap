@@ -33,6 +33,7 @@ import type { StoreForMap } from "@/components/map/MapView";
 import type { View } from "./ViewTabs";
 import type { TagMaster } from "@/types/store";
 import type { Area } from "@/lib/areas";
+import ClothesView, { type ClothForGrid } from "./ClothesView";
 
 type SearchMode = "store" | "clothes";
 
@@ -44,9 +45,10 @@ type Props = {
   tagMasters: TagMaster[];
   currentArea: Area;
   ratingMap: Record<string, RatingEntry>;
+  clothes: ClothForGrid[];
 };
 
-export default function HomeClient({ stores, defaultView, tagMasters, currentArea, ratingMap }: Props) {
+export default function HomeClient({ stores, defaultView, tagMasters, currentArea, ratingMap, clothes }: Props) {
   const [searchMode, setSearchMode] = useState<SearchMode>("store");
   const [view, setView] = useState<View>(defaultView);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -210,17 +212,8 @@ export default function HomeClient({ stores, defaultView, tagMasters, currentAre
           </div>
         </>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-gray-400">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M3 8l3-4h3a3 3 0 006 0h3l3 4-3 2v10H6V10L3 8z"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <p className="text-sm">服を探す機能は準備中です</p>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ClothesView clothes={clothes} />
         </div>
       )}
 

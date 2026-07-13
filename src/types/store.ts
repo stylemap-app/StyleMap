@@ -82,6 +82,21 @@ export interface Store {
   tags: TagMaster[]; // 全タグをまとめて保持し、type で絞って使う
 }
 
+export type ClothCategory = 'トップス' | 'パンツ' | 'アウター' | '靴' | 'アクセサリー';
+
+export interface Cloth {
+  id: string;
+  store_id: string;
+  name: string;
+  price: number;
+  image_url: string;
+  category: ClothCategory;
+  brand?: string | null;
+  description?: string | null;
+  is_published: boolean;
+  created_at: string;
+}
+
 // フィルターパネルの状態型
 export interface StoreFilter {
   style_slugs?: string[];

@@ -1,59 +1,64 @@
 "use client";
 
+import Link from "next/link";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
+import ClothesFavoriteButton from "@/components/auth/ClothesFavoriteButton";
 
-type Photo = {
+type Cloth = {
   id: string;
-  url: string;
-  caption: string | null;
+  name: string;
+  price: number;
+  image_url: string;
+  category: string;
+};
+
+type Props = {
+  clothes: Cloth[];
+  storeName: string;
+  initialFavoritedIds?: string[];
 };
 
 export default function ClothesCarousel({
-  photos,
+  clothes,
   storeName,
-}: {
-  photos: Photo[];
-  storeName: string;
-}) {
-  if (photos.length === 0) return null;
+  initialFavoritedIds = [],
+}: Props) {
+  if (clothes.length === 0) return null;
 
   return (
     <div
       className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-pl-4 -mx-4 px-4"
       style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
-      {photos.map((photo) => (
-        /* 将来フェーズ11で服詳細ページへ遷移するボタン（現時点は非活性） */
-        <button
-          key={photo.id}
-          className="relative flex-none snap-start w-36 rounded-xl overflow-hidden bg-gray-100 focus:outline-none"
-          style={{ height: "192px" }}
-          tabIndex={-1}
-          aria-hidden
-        >
-          <ImageWithFallback
-            src={photo.url}
-            alt={`${storeName} - ${photo.caption ?? "服"}`}
-            sizes="144px"
-          />
-          {/* ハートアイコン（将来実装、見た目のみ） */}
-          <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center pointer-events-none">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 20 20"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M10 17S3 12.5 3 8a4 4 0 018 0 4 4 0 018 0c0 4.5-7 9-7 9z"
-                stroke="#D4714A"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-              />
-            </svg>
+      {clothes.map((cloth) => (
+        <div key={cloth.id} className="relative flex-none snap-start w-36">
+          <Link
+            href={`/clothes/${cloth.id}`}
+            className="relative block rounded-xl overflow-hidden bg-gray-100 active:opacity-80"
+            style={{ height: "192px" }}
+          >
+            <ImageWithFallback
+              src={cloth.image_url}
+              alt={`${storeName} - ${cloth.name}`}
+              sizes="144px"
+            />
+          </Link>
+          <div className="absolute top-1 right-1 z-10">
+            <ClothesFavoriteButton
+              clothesId={cloth.id}
+              initialFavorited={initialFavoritedIds.includes(cloth.id)}
+              size="sm"
+            />
           </div>
-        </button>
+          <div className="mt-1.5 px-0.5">
+            <p className="text-[11px] text-ink font-medium leading-tight line-clamp-2">
+              {cloth.name}
+            </p>
+            <p className="text-[11px] text-gray-500 mt-0.5">
+              ¥{cloth.price.toLocaleString()}
+            </p>
+          </div>
+        </div>
       ))}
     </div>
   );

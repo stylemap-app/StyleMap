@@ -4,6 +4,7 @@ import HomeClient from "@/components/layout/HomeClient";
 import type { StoreForMap } from "@/components/map/MapView";
 import type { View } from "@/components/layout/ViewTabs";
 import type { TagMaster } from "@/types/store";
+import type { ClothForGrid } from "@/components/layout/ClothesView";
 import { AREA_ID_MAP, DEFAULT_AREA_SLUG, getArea } from "@/lib/areas";
 
 export default async function Home({
@@ -25,7 +26,7 @@ export default async function Home({
     .eq("is_published", true)
     .order("name");
 
-  const [{ data: storeData, error }, { data: tagData }, { data: reviewRows }] =
+  const [{ data: storeData, error }, { data: tagData }, { data: reviewRows }, { data: clothesData }] =
     await Promise.all([
       areaId ? storeQueryBase.eq("area_id", areaId) : storeQueryBase,
       supabase
@@ -35,6 +36,11 @@ export default async function Home({
         .order("type")
         .order("sort_order"),
       supabase.from("reviews").select("store_id, rating"),
+      supabase
+        .from("clothes")
+        .select("id, name, price, image_url, category")
+        .eq("is_published", true)
+        .order("created_at"),
     ]);
 
   if (error) console.error("Supabase fetch error:", error.message);
@@ -60,6 +66,7 @@ export default async function Home({
         tagMasters={(tagData ?? []) as unknown as TagMaster[]}
         currentArea={currentArea}
         ratingMap={ratingMap}
+        clothes={(clothesData ?? []) as ClothForGrid[]}
       />
     </Suspense>
   );

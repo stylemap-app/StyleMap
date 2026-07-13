@@ -124,7 +124,7 @@ export default async function StorePage({
 }) {
   const supabase = createClient();
 
-  const [{ data: store }, authResult] = await Promise.all([
+  const [{ data: store }, { data: clothesRaw }, authResult] = await Promise.all([
     supabase
       .from("stores")
       .select(
@@ -132,19 +132,38 @@ export default async function StorePage({
       )
       .eq("id", params.id)
       .maybeSingle(),
+    supabase
+      .from("clothes")
+      .select("id, name, price, image_url, category")
+      .eq("store_id", params.id)
+      .eq("is_published", true)
+      .order("created_at"),
     supabase.auth.getUser(),
   ]);
 
   if (!store) notFound();
 
   const user = authResult.data.user;
+  const clothes = clothesRaw ?? [];
+
   let initialFavorited = false;
+  let favoritedClothesIds: string[] = [];
+
   if (user) {
-    const { count } = await supabase
-      .from("favorites")
-      .select("store_id", { count: "exact", head: true })
-      .eq("store_id", store.id);
+    const [{ count }, { data: favs }] = await Promise.all([
+      supabase
+        .from("favorites")
+        .select("store_id", { count: "exact", head: true })
+        .eq("store_id", store.id),
+      clothes.length > 0
+        ? supabase
+            .from("clothes_favorites")
+            .select("clothes_id")
+            .in("clothes_id", clothes.map((c) => c.id))
+        : Promise.resolve({ data: [] }),
+    ]);
     initialFavorited = (count ?? 0) > 0;
+    favoritedClothesIds = (favs ?? []).map((f) => f.clothes_id as string);
   }
 
   const { data: reviewsData } = await supabase
@@ -245,13 +264,19 @@ export default async function StorePage({
           </span>
         </div>
 
-        {/* ④ 服写真カルーセル（フェーズ11用プレースホルダー） */}
-        <section>
-          <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-3">
-            服一覧
-          </h2>
-          <ClothesCarousel photos={photos} storeName={store.name} />
-        </section>
+        {/* ④ 服一覧カルーセル */}
+        {clothes.length > 0 && (
+          <section>
+            <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-3">
+              服一覧
+            </h2>
+            <ClothesCarousel
+              clothes={clothes}
+              storeName={store.name}
+              initialFavoritedIds={favoritedClothesIds}
+            />
+          </section>
+        )}
 
         {/* ⑤ 住所 */}
         <section>
