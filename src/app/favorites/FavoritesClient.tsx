@@ -13,6 +13,9 @@ import {
 import CreateListModal from "@/components/favorites/CreateListModal";
 import EditListModal from "@/components/favorites/EditListModal";
 import FavoriteStoreCard from "@/components/favorites/FavoriteStoreCard";
+import FavoriteClothesTab from "./FavoriteClothesTab";
+
+type FavTab = "store" | "clothes";
 
 type Props = {
   initialLists: FavoriteList[];
@@ -21,6 +24,7 @@ type Props = {
 
 export default function FavoritesClient({ initialLists, userId }: Props) {
   const supabase = useMemo(() => createClient(), []);
+  const [favTab, setFavTab] = useState<FavTab>("store");
   const [lists, setLists] = useState<FavoriteList[]>(initialLists);
   const [selectedListId, setSelectedListId] = useState<string | null>(
     initialLists[0]?.id ?? null
@@ -101,10 +105,29 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
           <span className="text-sm">戻る</span>
         </Link>
         <h1 className="text-[15px] font-bold text-ink text-center">
-          マイリスト
+          お気に入り
         </h1>
       </div>
 
+      {/* 店/服 タブ切り替え */}
+      <div className="sticky top-12 z-10 flex items-center gap-2 px-4 py-2.5 bg-paper border-b border-gray-200">
+        {(["store", "clothes"] as FavTab[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setFavTab(tab)}
+            className={`h-8 px-4 rounded-full text-sm font-semibold transition-colors ${
+              favTab === tab ? "bg-[#FFD700] text-ink" : "text-gray-500"
+            }`}
+          >
+            {tab === "store" ? "店のお気に入り" : "服のお気に入り"}
+          </button>
+        ))}
+      </div>
+
+      {favTab === "clothes" ? (
+        <FavoriteClothesTab />
+      ) : (
+      <>
       {/* リストタブ（block コンテナで overflow を封じ、内側を flex に） */}
       <div className="overflow-x-auto border-b border-gray-100">
         <div className="flex items-center gap-2 px-4 py-3 w-max min-w-full">
@@ -203,6 +226,8 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
           onRename={handleRenameList}
           onDelete={handleDeleteList}
         />
+      )}
+      </>
       )}
     </div>
   );

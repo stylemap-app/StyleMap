@@ -42,14 +42,15 @@ type RatingEntry = { avg: number; count: number };
 type Props = {
   stores: StoreForMap[];
   defaultView: View;
+  defaultSearchMode?: SearchMode;
   tagMasters: TagMaster[];
   currentArea: Area;
   ratingMap: Record<string, RatingEntry>;
   clothes: ClothForGrid[];
 };
 
-export default function HomeClient({ stores, defaultView, tagMasters, currentArea, ratingMap, clothes }: Props) {
-  const [searchMode, setSearchMode] = useState<SearchMode>("store");
+export default function HomeClient({ stores, defaultView, defaultSearchMode = "store", tagMasters, currentArea, ratingMap, clothes }: Props) {
+  const [searchMode, setSearchMode] = useState<SearchMode>(defaultSearchMode);
   const [view, setView] = useState<View>(defaultView);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAreaSelectOpen, setIsAreaSelectOpen] = useState(false);

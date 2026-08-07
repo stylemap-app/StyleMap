@@ -8,12 +8,14 @@ type Props = {
   clothesId: string;
   initialFavorited: boolean;
   size?: "sm" | "md";
+  onActionComplete?: () => void;
 };
 
 export default function ClothesFavoriteButton({
   clothesId,
   initialFavorited,
   size = "md",
+  onActionComplete,
 }: Props) {
   const [favorited, setFavorited] = useState(initialFavorited);
   const [isPopped, setIsPopped] = useState(false);
@@ -44,6 +46,7 @@ export default function ClothesFavoriteButton({
           .eq("user_id", session.user.id)
           .eq("clothes_id", clothesId);
         setFavorited(false);
+        onActionComplete?.();
       } else {
         await supabase
           .from("clothes_favorites")
@@ -51,6 +54,7 @@ export default function ClothesFavoriteButton({
         setFavorited(true);
         setIsPopped(true);
         setTimeout(() => setIsPopped(false), 350);
+        onActionComplete?.();
       }
     } finally {
       setLoading(false);

@@ -10,7 +10,7 @@ import { AREA_ID_MAP, DEFAULT_AREA_SLUG, getArea } from "@/lib/areas";
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { view?: string; area?: string };
+  searchParams: { view?: string; area?: string; tab?: string };
 }) {
   const supabase = createClient();
 
@@ -57,12 +57,14 @@ export default async function Home({
   }
 
   const defaultView: View = searchParams.view === "list" ? "list" : "map";
+  const defaultSearchMode = searchParams.tab === "clothes" ? "clothes" : "store";
 
   return (
     <Suspense>
       <HomeClient
         stores={(storeData ?? []) as unknown as StoreForMap[]}
         defaultView={defaultView}
+        defaultSearchMode={defaultSearchMode}
         tagMasters={(tagData ?? []) as unknown as TagMaster[]}
         currentArea={currentArea}
         ratingMap={ratingMap}

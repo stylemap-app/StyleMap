@@ -12,7 +12,19 @@
       "Bash(npx tsc *)",
       "Bash(npx next *)",
       "Bash(git commit *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "PowerShell(Get-Process *)",
+      "Bash(git tag *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "PowerShell(cd C:\\\\Users\\\\w0705\\\\Documents\\\\stylemap; npx next build 2>&1 | Where-Object { $_ -notmatch \"npm notice\" } | Select-Object -Last 25)",
+      "PowerShell(cd C:\\\\Users\\\\w0705\\\\Documents\\\\stylemap; npx tsc --noEmit 2>&1 | Where-Object { $_ -notmatch \"npm notice\" })",
+      "Bash(netstat -ano)",
+      "Bash(node scripts/_debug_favtabs.mjs)",
+      "Bash(node scripts/_debug_favtabs2.mjs)",
+      "Bash(node scripts/_debug_favtabs3.mjs)",
+      "Bash(git status *)"
     ]
   }
 }
