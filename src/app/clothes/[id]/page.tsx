@@ -126,6 +126,14 @@ export default async function ClothesDetailPage({
           </p>
         </div>
 
+        {/* 試着してみるボタン */}
+        <Link
+          href={`/tryon?clothesId=${cloth.id}`}
+          className="h-12 rounded-button bg-clay text-paper text-sm font-bold flex items-center justify-center gap-2 active:opacity-80"
+        >
+          試着してみる
+        </Link>
+
         {/* 説明文 */}
         {cloth.description && (
           <p className="text-sm text-ink leading-relaxed">{cloth.description}</p>

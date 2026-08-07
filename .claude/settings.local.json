@@ -24,7 +24,11 @@
       "Bash(node scripts/_debug_favtabs.mjs)",
       "Bash(node scripts/_debug_favtabs2.mjs)",
       "Bash(node scripts/_debug_favtabs3.mjs)",
-      "Bash(git status *)"
+      "Bash(git status *)",
+      "PowerShell(Get-CimInstance *)",
+      "PowerShell(Stop-Process *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000 --max-time 5)",
+      "Bash(npx eslint *)"
     ]
   }
 }
