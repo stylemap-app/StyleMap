@@ -24,6 +24,7 @@ export default async function Home({
       "id, name, nearest_station, price_range, lat, lng, store_photos(url, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
     )
     .eq("is_published", true)
+    .eq("is_hidden", false)
     .order("name");
 
   const [{ data: storeData, error }, { data: tagData }, { data: reviewRows }, { data: clothesData }] =

@@ -64,6 +64,7 @@ export async function generateMetadata({
       "name, address, nearest_station, store_photos(url, is_main, sort_order), store_tags(tag_masters(type, label_ja))"
     )
     .eq("id", params.id)
+    .eq("is_hidden", false)
     .maybeSingle();
 
   if (!store) return { title: "店舗が見つかりません" };
@@ -131,6 +132,7 @@ export default async function StorePage({
         "id, name, name_kana, address, nearest_station, lat, lng, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
       )
       .eq("id", params.id)
+      .eq("is_hidden", false)
       .maybeSingle(),
     supabase
       .from("clothes")

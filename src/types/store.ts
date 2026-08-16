@@ -77,10 +77,52 @@ export interface Store {
   created_at: string; // ISO 8601
   updated_at: string; // ISO 8601
 
+  // Google Places API連携（Phase A で追加。他フィールドと同じくDBの列名に合わせたsnake_case）
+  google_place_id?: string | null; // Places APIのplace_id（実店舗のみ。ダミー店舗はnull）
+  is_real_store: boolean;          // true=Places API連携の実店舗 / false=StyleMap独自のダミー店舗
+  is_hidden: boolean;              // 掲載停止依頼などで非表示にする場合true
+
   // リレーション（DB JOIN または静的データで付与）
   photos: StorePhoto[];
   tags: TagMaster[]; // 全タグをまとめて保持し、type で絞って使う
 }
+
+// ── Google Places API連携（二層データモデルの Layer 1） ──────────────
+// Places APIから都度取得する情報。Google利用規約によりDBには永続保存しない。
+// フィールド名はPlaces API (New) のレスポンス（camelCase）にそのまま合わせる。
+
+export interface PlaceLocation {
+  lat: number;
+  lng: number;
+}
+
+export interface PlaceOpeningHours {
+  weekdayDescriptions: string[];
+  openNow: boolean;
+}
+
+export interface PlacePhoto {
+  name: string; // Places API (New) のphotoリソース名。画像URL化には別途Photo APIの呼び出しが必要
+  widthPx?: number;
+  heightPx?: number;
+}
+
+export interface PlaceData {
+  placeId: string;
+  name: string;
+  formattedAddress: string;
+  location: PlaceLocation;
+  openingHours?: PlaceOpeningHours;
+  nationalPhoneNumber?: string;
+  photos: PlacePhoto[];
+  rating?: number;
+  userRatingCount?: number;
+  websiteUri?: string;
+  googleMapsUri?: string;
+}
+
+// Layer 2（保存するStore行）と Layer 1（都度取得するPlaceData）を合成した型
+export type StoreWithPlace = Store & { place: PlaceData | null };
 
 export type ClothCategory = 'トップス' | 'パンツ' | 'アウター' | '靴' | 'アクセサリー';
 
