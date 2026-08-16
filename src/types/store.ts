@@ -124,6 +124,17 @@ export interface PlaceData {
 // Layer 2（保存するStore行）と Layer 1（都度取得するPlaceData）を合成した型
 export type StoreWithPlace = Store & { place: PlaceData | null };
 
+// searchText の検索結果1件分。FieldMaskを絞っているためPlaceDataのサブセット
+export interface PlaceSearchResult {
+  placeId: string;
+  name: string;
+  formattedAddress: string;
+  location: PlaceLocation;
+  photos: PlacePhoto[];
+  rating?: number;
+  userRatingCount?: number;
+}
+
 export type ClothCategory = 'トップス' | 'パンツ' | 'アウター' | '靴' | 'アクセサリー';
 
 export interface Cloth {
