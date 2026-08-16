@@ -1,22 +1,32 @@
 import "server-only";
-import type { Store, StoreWithPlace, PlaceData, PlaceOpeningHours } from "@/types/store";
+import type { Store, PlaceData, PlaceOpeningHours } from "@/types/store";
 import { getPlaceWithCache, getPlacesWithCache } from "./cache";
 
-const WEEKDAY_JA = ["日", "月", "火", "水", "木", "金", "土"] as const;
+// 月曜始まり。Places API (New) の regularOpeningHours.weekdayDescriptions と
+// 曜日の並びを一致させるため（Googleは月曜始まり、StoreHours.regularは日曜始まり）
+const WEEKDAY_JA_MON_FIRST = ["月", "火", "水", "木", "金", "土", "日"] as const;
 
-// StyleMap独自の StoreHours を PlaceOpeningHours 形式（Google風のテキスト表現）に変換する
+// StyleMap独自の StoreHours（日曜始まり）を PlaceOpeningHours 形式
+// （Google風のテキスト表現・月曜始まり）に変換する
 function storeHoursToPlaceOpeningHours(store: Store): PlaceOpeningHours {
-  const weekdayDescriptions = store.hours.regular.map((day, i) => {
-    const label = `${WEEKDAY_JA[i]}曜日`;
-    if (!day.open || !day.close) return `${label}: 定休日`;
-    return `${label}: ${day.open}〜${day.close}`;
+  const regular = store.hours?.regular;
+  if (!regular || regular.length !== 7) {
+    return { weekdayDescriptions: [], openNow: false };
+  }
+
+  // regular[0]=日曜 なので、月曜始まりの並びに入れ替える
+  const weekdayDescriptions = WEEKDAY_JA_MON_FIRST.map((label, monIndex) => {
+    const sundayFirstIndex = (monIndex + 1) % 7;
+    const day = regular[sundayFirstIndex];
+    if (!day.open || !day.close) return `${label}曜日: 定休日`;
+    return `${label}曜日: ${day.open}〜${day.close}`;
   });
 
   // JST基準で「現在営業中か」を判定
   const jstNow = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
   );
-  const today = store.hours.regular[jstNow.getDay()];
+  const today = regular[jstNow.getDay()];
   let openNow = false;
   if (today.open && today.close) {
     const [openH, openM] = today.open.split(":").map(Number);
@@ -32,7 +42,6 @@ function storeHoursToPlaceOpeningHours(store: Store): PlaceOpeningHours {
 // ダミー店舗のDB値をPlaceData形式に変換する。
 // photosは意図的に空配列にする: PlaceData.photos[].name はGoogle Places写真
 // リソースのIDで、store.photosの直URLとは形式が別物のため混同できない
-// （実際の画像表示をどう統合するかはUIに触るPhase Cで判断する）
 function dummyStoreToPlaceData(store: Store): PlaceData {
   return {
     placeId: "",
@@ -46,7 +55,9 @@ function dummyStoreToPlaceData(store: Store): PlaceData {
   };
 }
 
-export async function mergeStoreWithPlace(store: Store): Promise<StoreWithPlace> {
+export async function mergeStoreWithPlace<T extends Store>(
+  store: T
+): Promise<T & { place: PlaceData | null }> {
   if (store.is_real_store && store.google_place_id) {
     const place = await getPlaceWithCache(store.google_place_id);
     return { ...store, place };
@@ -54,11 +65,11 @@ export async function mergeStoreWithPlace(store: Store): Promise<StoreWithPlace>
   return { ...store, place: dummyStoreToPlaceData(store) };
 }
 
-export async function mergeStoresWithPlaces(
-  stores: Store[]
-): Promise<StoreWithPlace[]> {
+export async function mergeStoresWithPlaces<T extends Store>(
+  stores: T[]
+): Promise<(T & { place: PlaceData | null })[]> {
   const realPlaceIds = stores
-    .filter((s): s is Store & { google_place_id: string } =>
+    .filter((s): s is T & { google_place_id: string } =>
       Boolean(s.is_real_store && s.google_place_id)
     )
     .map((s) => s.google_place_id);

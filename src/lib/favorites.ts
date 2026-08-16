@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PriceRange } from "@/types/store";
+import type { PlaceData, PriceRange, Store } from "@/types/store";
 import { ENTRY_SCORE_SLUGS } from "@/lib/vibes";
+import { getPlacePhotoUrl } from "@/lib/places/photo";
 
 export const DEFAULT_LIST_NAME = "行きたい店";
 
@@ -16,6 +17,13 @@ export type FavoriteStore = {
   priceRange: PriceRange;
   mainPhotoUrl?: string;
   entryScore: number;
+  is_real_store: boolean;
+};
+
+// getStoresInList() が返す生の店舗行（Placesマージ前）
+export type FavoriteStoreRow = Store & {
+  store_photos: { url: string; is_main: boolean; sort_order: number }[];
+  store_tags?: { tag_masters: { type: string; slug: string } | null }[];
 };
 
 // ユーザーの最初のリストを返す。なければ「行きたい店」を作成して返す
@@ -140,45 +148,60 @@ export async function deleteList(
   await supabase.from("favorite_lists").delete().eq("id", listId);
 }
 
-// 特定リストに含まれる店舗一覧を取得
+// 特定リストに含まれる店舗一覧を取得（生データのみ。Placesマージはしない）
+//
+// このファイルは FavoritesClient.tsx（クライアントコンポーネント）から
+// createList/renameList/deleteList と一緒に直接importされるため、
+// server-only な src/lib/places/merge.ts を持ち込むとクライアントビルドが
+// 壊れる。そのため実際のPlacesマージ＋フラット化は
+// src/app/api/favorites/stores/route.ts（サーバー専用）側で行い、
+// ここでは素のDB行を返すだけにとどめる。
 export async function getStoresInList(
   supabase: SupabaseClient,
   listId: string
-): Promise<FavoriteStore[]> {
+): Promise<FavoriteStoreRow[]> {
   const { data } = await supabase
     .from("favorites")
     .select(
-      "stores (id, name, price_range, store_photos (url, is_main, sort_order), store_tags (tag_masters (type, slug)))"
+      "stores (id, name, address, lat, lng, price_range, hours, links, is_real_store, google_place_id, store_photos (url, is_main, sort_order), store_tags (tag_masters (type, slug)))"
     )
     .eq("list_id", listId);
 
   return (data ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((f: any) => f.stores)
-    .filter(Boolean)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .map((store: any) => {
-      const photos = [...(store.store_photos ?? [])].sort(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (a: any, b: any) => {
-          if (a.is_main && !b.is_main) return -1;
-          if (!a.is_main && b.is_main) return 1;
-          return a.sort_order - b.sort_order;
-        }
-      );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tags = (store.store_tags ?? []).map((st: any) => st.tag_masters).filter(Boolean);
-      const entryScore = (ENTRY_SCORE_SLUGS as readonly string[]).filter((s) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        tags.some((t: any) => t.slug === s)
-      ).length;
+    .filter(Boolean) as FavoriteStoreRow[];
+}
 
-      return {
-        id: store.id as string,
-        name: store.name as string,
-        priceRange: store.price_range as PriceRange,
-        mainPhotoUrl: photos[0]?.url as string | undefined,
-        entryScore,
-      };
-    });
+// getStoresInList() の結果にPlacesマージ後の place を合成した行を、
+// 表示用のフラットな FavoriteStore に変換する（Places呼び出しは行わない純関数）
+export function toFavoriteStore(
+  store: FavoriteStoreRow & { place: PlaceData | null }
+): FavoriteStore {
+  const photos = [...(store.store_photos ?? [])].sort((a, b) => {
+    if (a.is_main && !b.is_main) return -1;
+    if (!a.is_main && b.is_main) return 1;
+    return a.sort_order - b.sort_order;
+  });
+  const tags = (store.store_tags ?? [])
+    .map((st) => st.tag_masters)
+    .filter((t): t is { type: string; slug: string } => Boolean(t));
+  const entryScore = (ENTRY_SCORE_SLUGS as readonly string[]).filter((s) =>
+    tags.some((t) => t.slug === s)
+  ).length;
+
+  const mainPhotoUrl = store.is_real_store
+    ? store.place?.photos[0]
+      ? getPlacePhotoUrl(store.place.photos[0].name)
+      : undefined
+    : photos[0]?.url;
+
+  return {
+    id: store.id,
+    name: store.place?.name || store.name,
+    priceRange: store.price_range as PriceRange,
+    mainPhotoUrl,
+    entryScore,
+    is_real_store: store.is_real_store,
+  };
 }

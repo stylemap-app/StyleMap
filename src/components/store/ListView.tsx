@@ -1,4 +1,5 @@
 import StoreListCard from "./StoreListCard";
+import PoweredByGoogle from "./PoweredByGoogle";
 import type { StoreForMap } from "@/components/map/MapView";
 import type { PriceRange } from "@/types/store";
 import { calcEntryScore, getVibeBadges } from "@/lib/vibes";
@@ -65,6 +66,7 @@ export default function ListView({
           );
         })}
       </div>
+      {stores.some((s) => s.is_real_store) && <PoweredByGoogle />}
     </div>
   );
 }

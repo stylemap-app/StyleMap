@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import BackButton from "@/components/layout/BackButton";
 import ClothesFavoriteButton from "@/components/auth/ClothesFavoriteButton";
+import type { Store } from "@/types/store";
+import { mergeStoreWithPlace } from "@/lib/places/merge";
 
 const CATEGORY_ICON: Record<string, string> = {
   トップス: "👕",
@@ -57,7 +59,7 @@ export default async function ClothesDetailPage({
     supabase
       .from("clothes")
       .select(
-        "id, name, price, image_url, category, brand, description, store_id, stores(id, name, nearest_station)"
+        "id, name, price, image_url, category, brand, description, store_id, stores(id, name, address, lat, lng, hours, links, nearest_station, is_real_store, google_place_id)"
       )
       .eq("id", params.id)
       .eq("is_published", true)
@@ -78,8 +80,10 @@ export default async function ClothesDetailPage({
     initialFavorited = (count ?? 0) > 0;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const store = cloth.stores as any;
+  const storeRaw = cloth.stores as unknown as
+    | (Store & { nearest_station: string })
+    | null;
+  const store = storeRaw ? await mergeStoreWithPlace(storeRaw) : null;
 
   return (
     <div className="min-h-[100dvh] bg-paper">
@@ -140,7 +144,7 @@ export default async function ClothesDetailPage({
         )}
 
         {/* この服を販売している店 */}
-        {store && (
+        {store?.place && (
           <section>
             <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-2">
               この服を販売している店
@@ -150,7 +154,7 @@ export default async function ClothesDetailPage({
               className="flex items-center justify-between rounded-card bg-white shadow-card p-4 active:opacity-80"
             >
               <div>
-                <p className="text-sm font-semibold text-ink">{store.name}</p>
+                <p className="text-sm font-semibold text-ink">{store.place.name}</p>
                 {store.nearest_station && (
                   <p className="text-xs text-gray-500 mt-0.5">
                     {store.nearest_station}

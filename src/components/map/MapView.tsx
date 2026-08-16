@@ -17,6 +17,7 @@ export type StoreForMap = {
   store_tags?: {
     tag_masters: { type: string; slug: string; label_ja: string } | null;
   }[];
+  is_real_store: boolean;
 };
 
 const DEFAULT_CENTER = { lat: 35.6613, lng: 139.668 };

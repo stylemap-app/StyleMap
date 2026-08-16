@@ -4,15 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { FavoriteList, FavoriteStore } from "@/lib/favorites";
-import {
-  createList,
-  renameList,
-  deleteList,
-  getStoresInList,
-} from "@/lib/favorites";
+import { createList, renameList, deleteList } from "@/lib/favorites";
 import CreateListModal from "@/components/favorites/CreateListModal";
 import EditListModal from "@/components/favorites/EditListModal";
 import FavoriteStoreCard from "@/components/favorites/FavoriteStoreCard";
+import PoweredByGoogle from "@/components/store/PoweredByGoogle";
 import FavoriteClothesTab from "./FavoriteClothesTab";
 
 type FavTab = "store" | "clothes";
@@ -34,18 +30,18 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingList, setEditingList] = useState<FavoriteList | null>(null);
 
-  const fetchStores = useCallback(
-    async (listId: string) => {
-      setLoading(true);
-      try {
-        const result = await getStoresInList(supabase, listId);
-        setStores(result);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [supabase]
-  );
+  // Places APIキーを扱うマージ処理はサーバー専用のため、
+  // ここでは直接Supabaseを叩かず /api/favorites/stores 経由で取得する
+  const fetchStores = useCallback(async (listId: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/favorites/stores?listId=${listId}`);
+      const { stores: result } = (await res.json()) as { stores: FavoriteStore[] };
+      setStores(result);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (selectedListId) {
@@ -200,14 +196,17 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
-            {stores.map((store) => (
-              <FavoriteStoreCard
-                key={store.id}
-                store={store}
-                onActionComplete={handleActionComplete}
-              />
-            ))}
+          <div className="pb-[calc(56px+2rem+env(safe-area-inset-bottom))]">
+            <div className="grid grid-cols-2 gap-3">
+              {stores.map((store) => (
+                <FavoriteStoreCard
+                  key={store.id}
+                  store={store}
+                  onActionComplete={handleActionComplete}
+                />
+              ))}
+            </div>
+            {stores.some((s) => s.is_real_store) && <PoweredByGoogle />}
           </div>
         )}
       </div>

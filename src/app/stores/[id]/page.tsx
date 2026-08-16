@@ -5,9 +5,12 @@ import HeroCarousel from "@/components/store/HeroCarousel";
 import ClothesCarousel from "@/components/store/ClothesCarousel";
 import HoursSection from "@/components/store/HoursSection";
 import ReviewSection from "@/components/store/ReviewSection";
+import PoweredByGoogle from "@/components/store/PoweredByGoogle";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 import BackButton from "@/components/layout/BackButton";
-import type { PriceRange, StoreHours, StoreLinks, TagType } from "@/types/store";
+import type { PriceRange, Store, StoreLinks, TagType } from "@/types/store";
+import { mergeStoreWithPlace } from "@/lib/places/merge";
+import { getPlacePhotoUrl } from "@/lib/places/photo";
 
 const PRICE_SYMBOLS: Record<PriceRange, string> = {
   1: "¥",
@@ -49,6 +52,13 @@ const ENTRY_SCORE_SLUGS = [
 
 type Tag = { type: string; slug: string; label_ja: string };
 
+type StoreDetailRow = Store & {
+  name_kana?: string | null;
+  operator_review?: string | null;
+  store_photos: { id: string; url: string; caption: string | null; is_main: boolean; sort_order: number }[];
+  store_tags?: { tag_masters: Tag | null }[];
+};
+
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://stylemap.vercel.app";
 
@@ -61,13 +71,17 @@ export async function generateMetadata({
   const { data: store } = await supabase
     .from("stores")
     .select(
-      "name, address, nearest_station, store_photos(url, is_main, sort_order), store_tags(tag_masters(type, label_ja))"
+      "name, address, nearest_station, lat, lng, hours, links, is_real_store, google_place_id, store_photos(url, is_main, sort_order), store_tags(tag_masters(type, label_ja))"
     )
     .eq("id", params.id)
     .eq("is_hidden", false)
     .maybeSingle();
 
   if (!store) return { title: "店舗が見つかりません" };
+
+  const storeWithPlace = await mergeStoreWithPlace(store as unknown as Store);
+  const place = storeWithPlace.place;
+  if (!place) return { title: "店舗が見つかりません" };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const styleTags = (store.store_tags ?? [])
@@ -82,38 +96,42 @@ export async function generateMetadata({
   const descParts = [
     styleTags.length > 0 ? styleTags.join("・") + "系" : null,
     store.nearest_station ? `${store.nearest_station}エリア` : null,
-    store.address,
+    place.formattedAddress,
   ].filter(Boolean);
   const description =
     descParts.join(" / ") ||
     "StyleMap - 自分に合う服屋を見つける、ファッション特化型店舗検索マップ";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sortedPhotos = [...(store.store_photos ?? [])].sort((a: any, b: any) => {
-    if (a.is_main && !b.is_main) return -1;
-    if (!a.is_main && b.is_main) return 1;
-    return a.sort_order - b.sort_order;
-  });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mainPhoto = sortedPhotos[0] as any;
+  const mainPhotoUrl = store.is_real_store
+    ? place.photos[0]
+      // OGP画像は絶対URLが必要なため、プロキシルートに SITE_URL を付与する
+      ? `${SITE_URL}${getPlacePhotoUrl(place.photos[0].name)}`
+      : undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    : [...(store.store_photos ?? [])].sort((a: any, b: any) => {
+        if (a.is_main && !b.is_main) return -1;
+        if (!a.is_main && b.is_main) return 1;
+        return a.sort_order - b.sort_order;
+      })[0]?.url;
+
   const storeUrl = `${SITE_URL}/stores/${params.id}`;
 
   return {
-    title: store.name,
+    title: place.name,
     description,
     alternates: { canonical: storeUrl },
     openGraph: {
-      title: `${store.name} | StyleMap`,
+      title: `${place.name} | StyleMap`,
       description,
       url: storeUrl,
       type: "website",
-      images: mainPhoto ? [{ url: mainPhoto.url, width: 1200, height: 630 }] : [],
+      images: mainPhotoUrl ? [{ url: mainPhotoUrl, width: 1200, height: 630 }] : [],
     },
     twitter: {
       card: "summary_large_image",
-      title: `${store.name} | StyleMap`,
+      title: `${place.name} | StyleMap`,
       description,
-      images: mainPhoto ? [mainPhoto.url] : [],
+      images: mainPhotoUrl ? [mainPhotoUrl] : [],
     },
   };
 }
@@ -129,7 +147,7 @@ export default async function StorePage({
     supabase
       .from("stores")
       .select(
-        "id, name, name_kana, address, nearest_station, lat, lng, price_range, hours, links, operator_review, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
+        "id, name, name_kana, address, nearest_station, lat, lng, price_range, hours, links, operator_review, is_real_store, google_place_id, store_photos(id, url, caption, is_main, sort_order), store_tags(tag_masters(type, slug, label_ja))"
       )
       .eq("id", params.id)
       .eq("is_hidden", false)
@@ -144,6 +162,10 @@ export default async function StorePage({
   ]);
 
   if (!store) notFound();
+
+  const storeWithPlace = await mergeStoreWithPlace(store as unknown as StoreDetailRow);
+  const place = storeWithPlace.place;
+  if (!place) notFound();
 
   const user = authResult.data.user;
   const clothes = clothesRaw ?? [];
@@ -182,11 +204,19 @@ export default async function StorePage({
     ? (allReviews.find((r) => r.user_id === user.id) ?? null)
     : null;
 
-  const photos = [...(store.store_photos ?? [])].sort((a, b) => {
-    if (a.is_main && !b.is_main) return -1;
-    if (!a.is_main && b.is_main) return 1;
-    return a.sort_order - b.sort_order;
-  });
+  const photos = store.is_real_store
+    ? place.photos.map((p, i) => ({
+        id: p.name,
+        url: getPlacePhotoUrl(p.name),
+        caption: null,
+        is_main: i === 0,
+        sort_order: i,
+      }))
+    : [...(store.store_photos ?? [])].sort((a, b) => {
+        if (a.is_main && !b.is_main) return -1;
+        if (!a.is_main && b.is_main) return 1;
+        return a.sort_order - b.sort_order;
+      });
 
   const allTags: Tag[] = (store.store_tags ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -203,19 +233,25 @@ export default async function StorePage({
     ENTRY_SCORE_SLUGS.includes(t.slug)
   ).length;
 
-  const hours = store.hours as unknown as StoreHours;
+  // Instagramはstyle独自のリンクなのでPlacesとは無関係にDBの値をそのまま使う
   const links = store.links as unknown as StoreLinks;
   const priceRange = store.price_range as PriceRange;
 
-  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}`;
+  const directionsUrl =
+    place.googleMapsUri ||
+    `https://www.google.com/maps/dir/?api=1&destination=${place.location.lat},${place.location.lng}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ClothingStore",
-    name: store.name,
-    address: store.address,
+    name: place.name,
+    address: place.formattedAddress,
     url: `${SITE_URL}/stores/${store.id}`,
-    ...(photos[0] && { image: photos.slice(0, 3).map((p) => p.url) }),
+    ...(photos[0] && {
+      image: photos
+        .slice(0, 3)
+        .map((p) => (p.url.startsWith("/") ? `${SITE_URL}${p.url}` : p.url)),
+    }),
     ...(store.nearest_station && {
       description: `${store.nearest_station}エリアの服屋`,
     }),
@@ -234,7 +270,7 @@ export default async function StorePage({
       </div>
 
       {/* ① ヒーロー写真カルーセル */}
-      <HeroCarousel photos={photos} storeName={store.name} />
+      <HeroCarousel photos={photos} storeName={place.name} />
 
       <div className="px-4 py-5 space-y-6">
 
@@ -242,7 +278,7 @@ export default async function StorePage({
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-[22px] font-bold text-ink leading-tight">
-              {store.name}
+              {place.name}
             </h1>
             {store.name_kana && (
               <p className="text-xs text-gray-500 mt-0.5">{store.name_kana}</p>
@@ -264,6 +300,12 @@ export default async function StorePage({
           <span className="text-xs bg-ink text-paper px-2.5 py-1 rounded-full font-price">
             {PRICE_SYMBOLS[priceRange]}&ensp;{PRICE_LABELS[priceRange]}
           </span>
+          {place.rating && (
+            <span className="text-xs bg-gray-100 text-ink px-2.5 py-1 rounded-full">
+              Google評価&ensp;★{place.rating.toFixed(1)}
+              {place.userRatingCount ? `（${place.userRatingCount}件）` : ""}
+            </span>
+          )}
         </div>
 
         {/* ④ 服一覧カルーセル */}
@@ -274,7 +316,7 @@ export default async function StorePage({
             </h2>
             <ClothesCarousel
               clothes={clothes}
-              storeName={store.name}
+              storeName={place.name}
               initialFavoritedIds={favoritedClothesIds}
             />
           </section>
@@ -285,15 +327,23 @@ export default async function StorePage({
           <h2 className="text-[11px] font-medium text-gray-500 tracking-label uppercase mb-1.5">
             住所
           </h2>
-          <p className="text-sm text-ink">{store.address}</p>
+          <p className="text-sm text-ink">{place.formattedAddress}</p>
           <p className="text-xs text-gray-500 mt-1">
             最寄駅：{store.nearest_station}
           </p>
+          {place.nationalPhoneNumber && (
+            <a
+              href={`tel:${place.nationalPhoneNumber}`}
+              className="text-xs text-clay mt-1 inline-block active:opacity-70"
+            >
+              {place.nationalPhoneNumber}
+            </a>
+          )}
         </section>
 
         {/* ⑥ 営業時間（今日 → タップで全曜日展開） */}
         <section className="rounded-card bg-white shadow-card p-4">
-          <HoursSection hours={hours} />
+          <HoursSection openingHours={place.openingHours} />
         </section>
 
         {/* ⑦ 入店前チェック */}
@@ -381,7 +431,7 @@ export default async function StorePage({
         />
 
         {/* ⑪ 外部リンク（Instagram・公式サイト） */}
-        {(links?.instagram || links?.official_site) && (
+        {(links?.instagram || place.websiteUri) && (
           <section className="space-y-2.5">
             {links.instagram && (
               <a
@@ -394,9 +444,9 @@ export default async function StorePage({
                 Instagramを見る
               </a>
             )}
-            {links.official_site && (
+            {place.websiteUri && (
               <a
-                href={links.official_site}
+                href={place.websiteUri}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full h-12 rounded-button border border-gray-300 text-ink text-sm font-medium active:opacity-80"
@@ -419,6 +469,8 @@ export default async function StorePage({
             <NavigationIcon />
             経路を調べる
           </a>
+          {/* Powered by Google（実店舗のみ） */}
+          {store.is_real_store && <PoweredByGoogle />}
         </section>
 
       </div>

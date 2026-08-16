@@ -1,21 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import type { StoreHours } from "@/types/store";
+import type { PlaceOpeningHours } from "@/types/store";
 
-const DAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"];
-
-export default function HoursSection({ hours }: { hours: StoreHours | null }) {
+export default function HoursSection({
+  openingHours,
+}: {
+  openingHours: PlaceOpeningHours | null | undefined;
+}) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!hours?.regular) return null;
+  if (!openingHours || openingHours.weekdayDescriptions.length !== 7) return null;
 
-  const todayIndex = new Date().getDay();
-  const todayHours = hours.regular[todayIndex];
-  const todayStr =
-    todayHours?.open && todayHours?.close
-      ? `${todayHours.open} – ${todayHours.close}`
-      : "定休日";
+  // weekdayDescriptions は月曜始まり。JSのDate.getDay()は日曜=0なので変換する
+  const todayIndex = (new Date().getDay() + 6) % 7;
+  const todayLine = openingHours.weekdayDescriptions[todayIndex];
 
   return (
     <div>
@@ -29,8 +28,14 @@ export default function HoursSection({ hours }: { hours: StoreHours | null }) {
         className="flex items-center justify-between w-full py-0.5"
       >
         <span className="text-sm text-ink">
-          <span className="text-gray-500">{DAY_NAMES[todayIndex]}（今日）</span>
-          &ensp;{todayStr}
+          {todayLine}
+          <span
+            className={`ml-2 text-[11px] font-medium ${
+              openingHours.openNow ? "text-clay" : "text-gray-400"
+            }`}
+          >
+            {openingHours.openNow ? "営業中" : "営業時間外"}
+          </span>
         </span>
         <svg
           width="16"
@@ -55,24 +60,16 @@ export default function HoursSection({ hours }: { hours: StoreHours | null }) {
       {/* 全曜日一覧（展開時） */}
       {expanded && (
         <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
-          {hours.regular.map((day, i) => (
-            <div
+          {openingHours.weekdayDescriptions.map((line, i) => (
+            <p
               key={i}
-              className={`flex text-sm ${
+              className={`text-sm ${
                 i === todayIndex ? "font-semibold text-ink" : "text-gray-600"
               }`}
             >
-              <span className="w-5 shrink-0">{DAY_NAMES[i]}</span>
-              <span className="ml-4">
-                {day.open && day.close
-                  ? `${day.open} – ${day.close}`
-                  : "定休日"}
-              </span>
-            </div>
+              {line}
+            </p>
           ))}
-          {hours.note && (
-            <p className="text-xs text-gray-500 mt-2">{hours.note}</p>
-          )}
         </div>
       )}
     </div>
