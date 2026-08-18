@@ -6,6 +6,8 @@ import Link from "next/link";
 export default function BottomNav() {
   const pathname = usePathname();
 
+  if (pathname.startsWith("/admin")) return null;
+
   const isSearch = pathname === "/";
   const isFavorites = pathname.startsWith("/favorites");
   const isTryon = pathname.startsWith("/tryon");
