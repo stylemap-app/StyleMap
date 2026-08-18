@@ -6,6 +6,7 @@ import ClothesCarousel from "@/components/store/ClothesCarousel";
 import HoursSection from "@/components/store/HoursSection";
 import ReviewSection from "@/components/store/ReviewSection";
 import PoweredByGoogle from "@/components/store/PoweredByGoogle";
+import PolicyLink from "@/components/store/PolicyLink";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 import BackButton from "@/components/layout/BackButton";
 import type { PriceRange, Store, StoreLinks, TagType } from "@/types/store";
@@ -471,6 +472,7 @@ export default async function StorePage({
           </a>
           {/* Powered by Google（実店舗のみ） */}
           {store.is_real_store && <PoweredByGoogle />}
+          <PolicyLink />
         </section>
 
       </div>

@@ -9,6 +9,7 @@ import CreateListModal from "@/components/favorites/CreateListModal";
 import EditListModal from "@/components/favorites/EditListModal";
 import FavoriteStoreCard from "@/components/favorites/FavoriteStoreCard";
 import PoweredByGoogle from "@/components/store/PoweredByGoogle";
+import PolicyLink from "@/components/store/PolicyLink";
 import FavoriteClothesTab from "./FavoriteClothesTab";
 
 type FavTab = "store" | "clothes";
@@ -207,6 +208,7 @@ export default function FavoritesClient({ initialLists, userId }: Props) {
               ))}
             </div>
             {stores.some((s) => s.is_real_store) && <PoweredByGoogle />}
+            <PolicyLink />
           </div>
         )}
       </div>
