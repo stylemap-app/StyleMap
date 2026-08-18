@@ -14,11 +14,27 @@ MVPエリアは下北沢または原宿。
 - 地図：Google Maps API
 - デプロイ：Vercel
 
-## 重要な注意事項
-- SupabaseのSite URLは開発中は http://localhost:3000 に設定
-- 本番デプロイ・デモ・プレゼン前には https://style-map-six.vercel.app に戻す必要がある
-- 設定場所：Supabase Dashboard → Authentication → URL Configuration
-- 忘れると本番でログインができなくなる
+## 開発時の重要な注意事項
+
+### SupabaseのSite URL切り替え
+開発中と本番確認で、SupabaseのSite URLを切り替える必要がある。
+忘れるとログイン後に意図しないURLへリダイレクトされる。
+
+【開発中（localhost で作業する時）】
+Supabase Dashboard → Authentication → URL Configuration
+Site URL = http://localhost:3000
+
+【本番確認・デモ・プレゼン前】
+Site URL = https://style-map-one.vercel.app
+
+※ Redirect URLs には両方登録済みなので変更不要
+※ Site URL を切り替えないと、localhost でログインしても
+   本番URLに飛ばされて開発できない
+
+### 管理画面へのアクセス
+/admin はURL直打ちでアクセスする（リンクは無し）
+ADMIN_USER_IDS に自分の Supabase user_id が
+設定されている必要がある
 
 ## 開発ルール
 - モバイルファースト
