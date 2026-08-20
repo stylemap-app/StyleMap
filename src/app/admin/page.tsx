@@ -4,6 +4,7 @@ import { mergeStoresWithPlaces } from "@/lib/places/merge";
 import type { Store } from "@/types/store";
 import { AREAS, AREA_ID_MAP } from "@/lib/areas";
 import { toggleStoreHidden } from "./actions";
+import DeleteStoreButton from "./DeleteStoreButton";
 
 type AdminStoreRow = Store & {
   area_id: string | null;
@@ -77,6 +78,10 @@ export default async function AdminDashboardPage() {
                     {store.is_hidden ? "掲載再開" : "掲載停止"}
                   </button>
                 </form>
+                {/* ダミー店舗（is_real_store=false）は誤削除防止のため削除ボタンを出さない。
+                    このページのクエリは is_real_store=true のみを取得しているため常にtrueだが、
+                    将来ダミー店舗も一覧に含める変更が入った際の保険として明示的にガードする */}
+                {store.is_real_store && <DeleteStoreButton storeId={store.id} />}
               </div>
             </div>
           ))}

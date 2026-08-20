@@ -48,8 +48,9 @@ export default function StoreListCard({
       className="flex flex-col rounded-card overflow-hidden bg-white shadow-card active:opacity-75 transition-opacity"
     >
       {/* 写真エリア（ハートボタンをオーバーレイ）
-          relative + height を1つの div に集約 */}
-      <div className="relative w-full" style={{ height: "160px" }}>
+          relative + アスペクト比1:1。縦長・横長どちらの元画像も
+          object-fit: cover で同じ正方形にトリミング表示される */}
+      <div className="relative w-full aspect-square">
         {mainPhotoUrl ? (
           <ImageWithFallback
             src={mainPhotoUrl}

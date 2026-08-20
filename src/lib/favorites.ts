@@ -192,7 +192,8 @@ export function toFavoriteStore(
 
   const mainPhotoUrl = store.is_real_store
     ? store.place?.photos[0]
-      ? getPlacePhotoUrl(store.place.photos[0].name)
+      // FavoriteStoreCard は一覧カード相当のサムネイル表示のため同じサイズを使う
+      ? getPlacePhotoUrl(store.place.photos[0].name, 400)
       : undefined
     : photos[0]?.url;
 

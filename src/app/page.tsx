@@ -79,9 +79,11 @@ export default async function Home({
       if (store.is_real_store && !store.place) return null;
 
       const place = store.place;
+      // 一覧カード（サムネイル1:1）とマップカルーセル（サムネイル1:1相当）の
+      // 両方でこの同じURLを使い回すため、必要な方の最大サイズ(400px)でリクエストする
       const storePhotos = store.is_real_store
         ? (place?.photos ?? []).map((p, i) => ({
-            url: getPlacePhotoUrl(p.name),
+            url: getPlacePhotoUrl(p.name, 400),
             is_main: i === 0,
             sort_order: i,
           }))

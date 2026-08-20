@@ -13,3 +13,33 @@ export async function toggleStoreHidden(storeId: string, nextHidden: boolean) {
 
   revalidatePath("/admin");
 }
+
+// is_hidden（一時的な非表示。データは残る）とは別の完全削除。
+// store_tags / store_photos / favorites / reviews / clothes は
+// すべて stores(id) に ON DELETE CASCADE を張っているため、
+// stores の行を消すだけでDBが原子的に関連レコードもまとめて削除する
+// （アプリ側で4テーブルを順番にDELETEするより、途中失敗による孤児レコードの
+//  リスクがなく安全）。
+export async function deleteStore(storeId: string) {
+  const user = await getAdminUser();
+  if (!user) throw new Error("Forbidden");
+
+  const supabase = createAdminClient();
+
+  const { data: store, error: fetchError } = await supabase
+    .from("stores")
+    .select("id, is_real_store")
+    .eq("id", storeId)
+    .maybeSingle();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!store) throw new Error("店舗が見つかりません");
+  // ダミー店舗の誤削除防止。UI側でもボタンを出さないが、Server Actionは
+  // 直接呼び出せるエンドポイントのためここでも再検証する。
+  if (!store.is_real_store) throw new Error("ダミー店舗は削除できません");
+
+  const { error } = await supabase.from("stores").delete().eq("id", storeId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
+}

@@ -28,7 +28,7 @@ export default function HeroCarousel({
   };
 
   if (photos.length === 0) {
-    return <div className="w-full bg-gray-100" style={{ height: "280px" }} />;
+    return <div className="w-full aspect-[4/3] bg-gray-100" />;
   }
 
   return (
@@ -40,8 +40,9 @@ export default function HeroCarousel({
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {photos.map((photo, i) => (
-          // relative + 固定高で fill モードの Image を受け取る
-          <div key={photo.id} className="relative flex-none w-full snap-start" style={{ height: "280px" }}>
+          // relative + アスペクト比4:3で fill モードの Image を受け取る。
+          // 縦長・横長どちらの元画像も object-fit: cover で同じ枠にトリミング表示される
+          <div key={photo.id} className="relative flex-none w-full aspect-[4/3] snap-start">
             <ImageWithFallback
               src={photo.url}
               alt={`${storeName}${photo.caption ? ` - ${photo.caption}` : ""}`}

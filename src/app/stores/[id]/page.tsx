@@ -208,7 +208,8 @@ export default async function StorePage({
   const photos = store.is_real_store
     ? place.photos.map((p, i) => ({
         id: p.name,
-        url: getPlacePhotoUrl(p.name),
+        // ヒーロー画像は画面幅いっぱいに表示されるため大きめのサイズをリクエストする
+        url: getPlacePhotoUrl(p.name, 1200),
         caption: null,
         is_main: i === 0,
         sort_order: i,
