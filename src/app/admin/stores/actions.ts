@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getAdminUser } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchPlacesByText } from "@/lib/places/client";
@@ -58,21 +59,33 @@ export async function searchStores(
 
 // google_place_id と StyleMap独自データ（area_id等）のみを保存する。
 // 店名・住所・座標はGoogle利用規約により保存しない（表示時にPlaces APIから都度取得）
-export async function registerStore(placeId: string, areaSlug: string) {
+// 戻り値の店舗IDは、登録直後にタグ編集画面（/admin/stores/[id]）へ
+// 自動遷移させるために呼び出し元（AdminStoreSearch）で使う
+export async function registerStore(
+  placeId: string,
+  areaSlug: string
+): Promise<string> {
   const user = await getAdminUser();
   if (!user) throw new Error("Forbidden");
 
   const areaId = AREA_ID_MAP[areaSlug] ?? null;
   const supabase = createAdminClient();
 
-  const { error } = await supabase.from("stores").insert({
-    google_place_id: placeId,
-    is_real_store: true,
-    is_published: false,
-    area_id: areaId,
-  });
+  const { data, error } = await supabase
+    .from("stores")
+    .insert({
+      google_place_id: placeId,
+      is_real_store: true,
+      is_published: false,
+      area_id: areaId,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     throw new Error(error.message);
   }
+
+  revalidatePath("/admin");
+  return data.id;
 }

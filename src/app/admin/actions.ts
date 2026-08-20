@@ -14,6 +14,18 @@ export async function toggleStoreHidden(storeId: string, nextHidden: boolean) {
   revalidatePath("/admin");
 }
 
+// 一覧からその場で公開/非公開を切り替える。タグ編集画面（/admin/stores/[id]）の
+// 「公開する」チェックボックスと同じ is_published を更新するだけの軽量版。
+export async function toggleStorePublished(storeId: string, nextPublished: boolean) {
+  const user = await getAdminUser();
+  if (!user) throw new Error("Forbidden");
+
+  const supabase = createAdminClient();
+  await supabase.from("stores").update({ is_published: nextPublished }).eq("id", storeId);
+
+  revalidatePath("/admin");
+}
+
 // is_hidden（一時的な非表示。データは残る）とは別の完全削除。
 // store_tags / store_photos / favorites / reviews / clothes は
 // すべて stores(id) に ON DELETE CASCADE を張っているため、

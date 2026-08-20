@@ -5,6 +5,7 @@ import type { Store } from "@/types/store";
 import { AREAS, AREA_ID_MAP } from "@/lib/areas";
 import { toggleStoreHidden } from "./actions";
 import DeleteStoreButton from "./DeleteStoreButton";
+import PublishToggle from "./PublishToggle";
 
 type AdminStoreRow = Store & {
   area_id: string | null;
@@ -30,6 +31,7 @@ export default async function AdminDashboardPage() {
 
   const rows = (data ?? []) as unknown as AdminStoreRow[];
   const storesWithPlace = await mergeStoresWithPlaces(rows);
+  const unpublishedCount = storesWithPlace.filter((s) => !s.is_published).length;
 
   return (
     <div className="space-y-4">
@@ -43,6 +45,12 @@ export default async function AdminDashboardPage() {
         </Link>
       </div>
 
+      {unpublishedCount > 0 && (
+        <div className="rounded-card bg-clay/10 border border-clay/30 px-3 py-2 text-xs text-clay font-medium">
+          未公開の店舗が{unpublishedCount}件あります
+        </div>
+      )}
+
       {storesWithPlace.length === 0 ? (
         <p className="text-sm text-gray-400">登録済みの実店舗はまだありません</p>
       ) : (
@@ -55,15 +63,20 @@ export default async function AdminDashboardPage() {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-ink truncate">
                   {store.place?.name ?? "（Places情報取得失敗）"}
+                  {!store.is_published && (
+                    <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-clay text-paper font-medium">
+                      未公開
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {store.area_id ? AREA_ID_TO_NAME.get(store.area_id) ?? "-" : "-"}
                   &ensp;・&ensp;タグ{store.store_tags?.length ?? 0}件
-                  &ensp;・&ensp;{store.is_published ? "公開中" : "非公開"}
-                  {store.is_hidden && "（掲載停止中）"}
+                  {store.is_hidden && <>&ensp;・&ensp;（掲載停止中）</>}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
+                <PublishToggle storeId={store.id} isPublished={store.is_published} />
                 <Link
                   href={`/admin/stores/${store.id}`}
                   className="text-xs px-2.5 py-1.5 rounded-button border border-gray-300 text-ink active:opacity-70"

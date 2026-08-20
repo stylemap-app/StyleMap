@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import { AREAS } from "@/lib/areas";
 import { searchStores, registerStore, type AdminSearchResult } from "./actions";
 
 export default function AdminStoreSearch() {
+  const router = useRouter();
   const [areaSlug, setAreaSlug] = useState(AREAS[0].slug);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AdminSearchResult[]>([]);
@@ -30,15 +32,11 @@ export default function AdminStoreSearch() {
     setRegisteringId(placeId);
     setError(null);
     try {
-      await registerStore(placeId, areaSlug);
-      setResults((prev) =>
-        prev.map((r) =>
-          r.placeId === placeId ? { ...r, alreadyRegistered: true } : r
-        )
-      );
+      const storeId = await registerStore(placeId, areaSlug);
+      // 登録して終わりにしない：そのままタグ編集・公開画面へ遷移させる
+      router.push(`/admin/stores/${storeId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "登録に失敗しました");
-    } finally {
       setRegisteringId(null);
     }
   };
