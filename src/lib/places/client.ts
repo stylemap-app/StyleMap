@@ -22,8 +22,6 @@ const DETAILS_FIELD_MASK = [
   "userRatingCount",
   "websiteUri",
   "googleMapsUri",
-  "types",      // AIタグ推定の入力に使うGoogleカテゴリ情報
-  "priceLevel", // AIタグ推定の価格帯はこの実データを優先し、AIには推定させない
 ].join(",");
 
 const SEARCH_FIELD_MASK = [
@@ -55,8 +53,6 @@ type RawPlace = {
   userRatingCount?: number;
   websiteUri?: string;
   googleMapsUri?: string;
-  types?: string[];
-  priceLevel?: string; // Places API (New) のenum文字列（例: "PRICE_LEVEL_MODERATE"）
 };
 
 function toPlacePhotos(photos: RawPlace["photos"]) {
@@ -88,8 +84,6 @@ function toPlaceData(raw: RawPlace): PlaceData {
     userRatingCount: raw.userRatingCount,
     websiteUri: raw.websiteUri,
     googleMapsUri: raw.googleMapsUri,
-    types: raw.types,
-    priceLevel: raw.priceLevel,
   };
 }
 

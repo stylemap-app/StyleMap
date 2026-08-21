@@ -119,11 +119,6 @@ export interface PlaceData {
   userRatingCount?: number;
   websiteUri?: string;
   googleMapsUri?: string;
-  // Googleのカテゴリ情報（例: "clothing_store"）。AIタグ推定の入力にのみ使用
-  types?: string[];
-  // Places API (New) のenum文字列（例: "PRICE_LEVEL_MODERATE"）。
-  // AIタグ推定の価格帯はこの実データを優先し、AIには推定させない
-  priceLevel?: string;
 }
 
 // Layer 2（保存するStore行）と Layer 1（都度取得するPlaceData）を合成した型

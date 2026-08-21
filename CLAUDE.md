@@ -106,3 +106,39 @@ ADMIN_USER_IDS に自分の Supabase user_id が
 【将来 Batch API を検討すべき条件】
 - 一度に500店舗以上をまとめて処理する場合
 - 精度が安定し、結果を即確認する必要がなくなった場合
+
+## Google Maps Platform 規約に関する重要事項
+
+2026年8月、Google Maps Platform サポートに問い合わせ、
+以下の公式回答を得た。
+
+【禁止されること】
+- Places APIから取得したデータ（店名・住所・place types・
+  レビュー本文など、すべてのGoogle Maps Content）を
+  外部サービス（LLM含む）に送信すること
+  → Section 3.2.3(a) 違反
+- Google Maps Content を元に新しい分類・タグ等を生成し、
+  自社DBに保存すること
+  → Section 3.2.3(c) 違反
+- これはLLMに限らず、人間が読んで判断する場合も同様
+
+【許可されること】
+- place_id を無期限に保存すること
+- 自社スタッフが独自に（Google Maps Contentを参照せずに）
+  評価・分類した情報を place_id に紐付けて保存すること
+  → Googleが意図した place_id の正しい使い方であると明言された
+
+【StyleMapでの実装方針】
+- タグは必ず人間が独自の判断で付与する
+  （現地訪問、店舗Instagram、店舗公式サイトなど、
+    Google以外の情報源に基づく）
+- Places APIのデータは表示のみに使用し、
+  それを元に新しい情報を作らない
+
+## ai_last_inferred_at カラムについて
+
+AI推定機能を削除した後もこのカラムは残している。
+現在は「一度処理を試みたが、タグが付かなかった店舗」を
+識別するメタデータとして使用しており、
+Google Maps Content から派生したデータではない。
+UIでは「未タグ付け」バッジとして表示している。

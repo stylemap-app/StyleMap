@@ -3,8 +3,6 @@
 import { redirect } from "next/navigation";
 import { getAdminUser } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getPlaceWithCache } from "@/lib/places/cache";
-import { inferStoreTags, type TagInferenceResult } from "@/lib/claude/inferTags";
 
 export async function saveStoreTags(storeId: string, formData: FormData) {
   const user = await getAdminUser();
@@ -43,35 +41,4 @@ export async function saveStoreTags(storeId: string, formData: FormData) {
   }
 
   redirect("/admin");
-}
-
-// 「AIでタグを推定」ボタンから呼ばれる。Places情報（店名・住所・カテゴリ）のみを
-// Claudeに渡し、Googleレビュー本文は使わない。結果はフォームへの初期値提案であり、
-// ここでは何もDBに書き込まない（保存は必ず人間が確認して saveStoreTags を呼ぶ）。
-// 失敗時は例外を投げず null を返す
-export async function inferStoreTagsAction(
-  storeId: string
-): Promise<TagInferenceResult | null> {
-  const user = await getAdminUser();
-  if (!user) throw new Error("Forbidden");
-
-  const supabase = createAdminClient();
-  const { data: store } = await supabase
-    .from("stores")
-    .select("google_place_id, is_real_store, search_keyword")
-    .eq("id", storeId)
-    .maybeSingle();
-
-  if (!store || !store.is_real_store || !store.google_place_id) return null;
-
-  const place = await getPlaceWithCache(store.google_place_id);
-  if (!place) return null;
-
-  return inferStoreTags({
-    name: place.name,
-    address: place.formattedAddress,
-    placeTypes: place.types ?? [],
-    priceLevel: place.priceLevel,
-    searchKeyword: store.search_keyword ?? undefined,
-  });
 }

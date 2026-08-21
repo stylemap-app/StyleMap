@@ -130,7 +130,7 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                 )}
                 {store.aiInferenceFailed && (
                   <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 font-medium">
-                    AI判定不能
+                    未タグ付け
                   </span>
                 )}
               </p>
