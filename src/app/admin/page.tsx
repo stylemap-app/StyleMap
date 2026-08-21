@@ -3,9 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { mergeStoresWithPlaces } from "@/lib/places/merge";
 import type { Store } from "@/types/store";
 import { AREAS, AREA_ID_MAP } from "@/lib/areas";
-import { toggleStoreHidden } from "./actions";
-import DeleteStoreButton from "./DeleteStoreButton";
-import PublishToggle from "./PublishToggle";
+import AdminStoreListClient, { type AdminStoreListItem } from "./AdminStoreListClient";
 
 type AdminStoreRow = Store & {
   area_id: string | null;
@@ -33,6 +31,16 @@ export default async function AdminDashboardPage() {
   const storesWithPlace = await mergeStoresWithPlaces(rows);
   const unpublishedCount = storesWithPlace.filter((s) => !s.is_published).length;
 
+  const listItems: AdminStoreListItem[] = storesWithPlace.map((store) => ({
+    id: store.id,
+    name: store.place?.name ?? "（Places情報取得失敗）",
+    areaName: store.area_id ? AREA_ID_TO_NAME.get(store.area_id) ?? "-" : "-",
+    tagCount: store.store_tags?.length ?? 0,
+    is_published: store.is_published,
+    is_hidden: store.is_hidden,
+    is_real_store: store.is_real_store,
+  }));
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -51,54 +59,10 @@ export default async function AdminDashboardPage() {
         </div>
       )}
 
-      {storesWithPlace.length === 0 ? (
+      {listItems.length === 0 ? (
         <p className="text-sm text-gray-400">登録済みの実店舗はまだありません</p>
       ) : (
-        <div className="space-y-2">
-          {storesWithPlace.map((store) => (
-            <div
-              key={store.id}
-              className="flex items-center justify-between gap-3 rounded-card bg-white shadow-card p-3"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-ink truncate">
-                  {store.place?.name ?? "（Places情報取得失敗）"}
-                  {!store.is_published && (
-                    <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-clay text-paper font-medium">
-                      未公開
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {store.area_id ? AREA_ID_TO_NAME.get(store.area_id) ?? "-" : "-"}
-                  &ensp;・&ensp;タグ{store.store_tags?.length ?? 0}件
-                  {store.is_hidden && <>&ensp;・&ensp;（掲載停止中）</>}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <PublishToggle storeId={store.id} isPublished={store.is_published} />
-                <Link
-                  href={`/admin/stores/${store.id}`}
-                  className="text-xs px-2.5 py-1.5 rounded-button border border-gray-300 text-ink active:opacity-70"
-                >
-                  タグ編集
-                </Link>
-                <form action={toggleStoreHidden.bind(null, store.id, !store.is_hidden)}>
-                  <button
-                    type="submit"
-                    className="text-xs px-2.5 py-1.5 rounded-button border border-gray-300 text-ink active:opacity-70"
-                  >
-                    {store.is_hidden ? "掲載再開" : "掲載停止"}
-                  </button>
-                </form>
-                {/* ダミー店舗（is_real_store=false）は誤削除防止のため削除ボタンを出さない。
-                    このページのクエリは is_real_store=true のみを取得しているため常にtrueだが、
-                    将来ダミー店舗も一覧に含める変更が入った際の保険として明示的にガードする */}
-                {store.is_real_store && <DeleteStoreButton storeId={store.id} />}
-              </div>
-            </div>
-          ))}
-        </div>
+        <AdminStoreListClient stores={listItems} />
       )}
     </div>
   );
