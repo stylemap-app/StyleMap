@@ -23,6 +23,9 @@ export default async function AdminLayout({
           <Link href="/admin/stores" className="text-xs text-paper/70 active:opacity-70">
             新規登録
           </Link>
+          <Link href="/admin/stores/bulk" className="text-xs text-paper/70 active:opacity-70">
+            一括登録
+          </Link>
         </div>
         <Link href="/" className="text-xs text-paper/70 active:opacity-70">
           サイトに戻る
