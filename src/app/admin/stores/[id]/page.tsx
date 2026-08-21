@@ -2,15 +2,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPlaceWithCache } from "@/lib/places/cache";
-import type { TagMaster, PriceRange } from "@/types/store";
-import { saveStoreTags } from "./actions";
-
-const PRICE_OPTIONS: { value: PriceRange; symbol: string; label: string }[] = [
-  { value: 1, symbol: "¥", label: "〜¥3,000" },
-  { value: 2, symbol: "¥¥", label: "¥3,000〜¥8,000" },
-  { value: 3, symbol: "¥¥¥", label: "¥8,000〜¥20,000" },
-  { value: 4, symbol: "¥¥¥¥", label: "¥20,000〜" },
-];
+import type { TagMaster } from "@/types/store";
+import StoreTagForm from "./StoreTagForm";
 
 export default async function AdminStoreEditPage({
   params,
@@ -35,17 +28,15 @@ export default async function AdminStoreEditPage({
   const { data: tagMasters } = await supabase
     .from("tag_masters")
     .select("id, type, slug, label_ja, sort_order")
-    .in("type", ["style", "vibe", "gender", "age_group"])
+    .in("type", ["style", "category", "vibe", "gender", "age_group"])
     .order("type")
     .order("sort_order");
 
   const allTags = (tagMasters ?? []) as unknown as TagMaster[];
-  const selectedTagIds = new Set(
+  const selectedTagIds = (store.store_tags ?? []).map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (store.store_tags ?? []).map((t: any) => t.tag_id as number)
+    (t: any) => t.tag_id as number
   );
-
-  const byType = (type: string) => allTags.filter((t) => t.type === type);
 
   return (
     <div className="space-y-6 pb-10">
@@ -74,119 +65,15 @@ export default async function AdminStoreEditPage({
         )}
       </section>
 
-      <form action={saveStoreTags.bind(null, store.id)} className="space-y-6">
-        <TagCheckboxGroup
-          title="系統タグ"
-          tags={byType("style")}
-          selectedIds={selectedTagIds}
-        />
-        <TagCheckboxGroup
-          title="雰囲気タグ"
-          tags={byType("vibe")}
-          selectedIds={selectedTagIds}
-        />
-        <TagCheckboxGroup
-          title="客層タグ"
-          tags={[...byType("gender"), ...byType("age_group")]}
-          selectedIds={selectedTagIds}
-        />
-
-        <section>
-          <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
-            価格帯
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {PRICE_OPTIONS.map((opt) => (
-              <label key={opt.value} className="flex items-center gap-1.5 text-sm text-ink">
-                <input
-                  type="radio"
-                  name="priceRange"
-                  value={opt.value}
-                  defaultChecked={store.price_range === opt.value}
-                />
-                {opt.symbol}
-              </label>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
-            最寄駅
-          </label>
-          <input
-            name="nearestStation"
-            defaultValue={store.nearest_station ?? ""}
-            className="w-full h-10 rounded-button border border-gray-300 px-3 text-sm"
-          />
-        </section>
-
-        <section>
-          <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
-            スタッフより一言
-          </label>
-          <textarea
-            name="operatorReview"
-            defaultValue={store.operator_review ?? ""}
-            rows={4}
-            className="w-full rounded-button border border-gray-300 p-3 text-sm"
-          />
-        </section>
-
-        <section>
-          <label className="flex items-center gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              name="isPublished"
-              value="true"
-              defaultChecked={store.is_published}
-            />
-            公開する
-          </label>
-        </section>
-
-        <button
-          type="submit"
-          className="w-full h-12 rounded-button bg-clay text-paper text-sm font-bold active:opacity-80"
-        >
-          保存
-        </button>
-      </form>
+      <StoreTagForm
+        storeId={store.id}
+        allTags={allTags}
+        initialSelectedTagIds={selectedTagIds}
+        initialPriceRange={store.price_range}
+        initialNearestStation={store.nearest_station ?? ""}
+        initialOperatorReview={store.operator_review ?? ""}
+        initialIsPublished={store.is_published}
+      />
     </div>
-  );
-}
-
-function TagCheckboxGroup({
-  title,
-  tags,
-  selectedIds,
-}: {
-  title: string;
-  tags: TagMaster[];
-  selectedIds: Set<number>;
-}) {
-  if (tags.length === 0) return null;
-  return (
-    <section>
-      <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
-        {title}
-      </h2>
-      <div className="flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <label
-            key={tag.id}
-            className="flex items-center gap-1.5 text-xs bg-gray-100 px-2.5 py-1.5 rounded-full text-ink"
-          >
-            <input
-              type="checkbox"
-              name="tag"
-              value={tag.id}
-              defaultChecked={selectedIds.has(tag.id)}
-            />
-            {tag.label_ja}
-          </label>
-        ))}
-      </div>
-    </section>
   );
 }
