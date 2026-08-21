@@ -58,7 +58,7 @@ export async function inferStoreTagsAction(
   const supabase = createAdminClient();
   const { data: store } = await supabase
     .from("stores")
-    .select("google_place_id, is_real_store")
+    .select("google_place_id, is_real_store, search_keyword")
     .eq("id", storeId)
     .maybeSingle();
 
@@ -72,5 +72,6 @@ export async function inferStoreTagsAction(
     address: place.formattedAddress,
     placeTypes: place.types ?? [],
     priceLevel: place.priceLevel,
+    searchKeyword: store.search_keyword ?? undefined,
   });
 }

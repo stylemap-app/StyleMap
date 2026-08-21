@@ -14,6 +14,9 @@ export type BulkSearchResult = {
   photoUrl?: string;
   rating?: number;
   userRatingCount?: number;
+  // ヒットした検索キーワード（複数ヒット時は複数件）。
+  // 登録時に stores.search_keyword としてカンマ区切りで保存する
+  matchedKeywords: string[];
 };
 
 export type BulkSearchResponse = {
@@ -49,14 +52,23 @@ export async function bulkSearchStores(
     : undefined;
 
   const resultsByKeyword = await Promise.all(
-    keywords.map((keyword) => searchPlacesByText(keyword, { locationBias }))
+    keywords.map((keyword) =>
+      searchPlacesByText(keyword, { locationBias }).then((places) => ({ keyword, places }))
+    )
   );
 
-  // 同じ店舗が複数キーワードでヒットする場合があるため place_id で統合
+  // 同じ店舗が複数キーワードでヒットする場合があるため place_id で統合。
+  // どのキーワードでヒットしたかも記録し、登録時にAI推定の補助情報として保存する
   const merged = new Map<string, BulkSearchResult>();
-  for (const places of resultsByKeyword) {
+  for (const { keyword, places } of resultsByKeyword) {
     for (const p of places) {
-      if (merged.has(p.placeId)) continue;
+      const existing = merged.get(p.placeId);
+      if (existing) {
+        if (!existing.matchedKeywords.includes(keyword)) {
+          existing.matchedKeywords.push(keyword);
+        }
+        continue;
+      }
       merged.set(p.placeId, {
         placeId: p.placeId,
         name: p.name,
@@ -64,6 +76,7 @@ export async function bulkSearchStores(
         photoUrl: p.photos[0] ? getPlacePhotoUrl(p.photos[0].name, 200) : undefined,
         rating: p.rating,
         userRatingCount: p.userRatingCount,
+        matchedKeywords: [keyword],
       });
     }
   }
@@ -86,25 +99,32 @@ export async function bulkSearchStores(
   };
 }
 
+export type BulkRegisterItem = {
+  placeId: string;
+  // 検索キーワード（複数ヒット時はカンマ区切りにして渡す）
+  searchKeyword: string | null;
+};
+
 // 選択された店舗をまとめて登録する。1件登録（registerStore）と同じく
-// google_place_id / is_real_store / is_published=false / area_id のみを保存する
-// （店名・住所等はGoogle利用規約により保存しない）
+// google_place_id / is_real_store / is_published=false / area_id / search_keyword
+// のみを保存する（店名・住所等はGoogle利用規約により保存しない）
 export async function bulkRegisterStores(
-  placeIds: string[],
+  items: BulkRegisterItem[],
   areaSlug: string
 ): Promise<{ insertedCount: number }> {
   const user = await getAdminUser();
   if (!user) throw new Error("Forbidden");
-  if (placeIds.length === 0) return { insertedCount: 0 };
+  if (items.length === 0) return { insertedCount: 0 };
 
   const areaId = AREA_ID_MAP[areaSlug] ?? null;
   const supabase = createAdminClient();
 
-  const rows = placeIds.map((placeId) => ({
+  const rows = items.map(({ placeId, searchKeyword }) => ({
     google_place_id: placeId,
     is_real_store: true,
     is_published: false,
     area_id: areaId,
+    search_keyword: searchKeyword,
   }));
 
   // 検索〜登録の間に別操作で先に登録された分と衝突しても落ちないよう、

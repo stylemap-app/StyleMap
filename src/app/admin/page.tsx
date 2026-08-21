@@ -19,27 +19,42 @@ const AREA_ID_TO_NAME = new Map(
 
 export default async function AdminDashboardPage() {
   const supabase = createAdminClient();
+
+  const { data: tagMasterRows } = await supabase
+    .from("tag_masters")
+    .select("id")
+    .in("type", ["style", "category"]);
+  const styleOrCategoryTagIds = new Set((tagMasterRows ?? []).map((t) => t.id));
+
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, name, address, lat, lng, nearest_station, price_range, hours, links, operator_review, is_published, is_hidden, is_real_store, google_place_id, area_id, created_at, store_tags(tag_id)"
+      "id, name, address, lat, lng, nearest_station, price_range, hours, links, operator_review, is_published, is_hidden, is_real_store, google_place_id, area_id, created_at, ai_last_inferred_at, store_tags(tag_id)"
     )
     .eq("is_real_store", true)
     .order("created_at", { ascending: false });
 
-  const rows = (data ?? []) as unknown as AdminStoreRow[];
+  const rows = (data ?? []) as unknown as (AdminStoreRow & {
+    ai_last_inferred_at: string | null;
+  })[];
   const storesWithPlace = await mergeStoresWithPlaces(rows);
   const unpublishedCount = storesWithPlace.filter((s) => !s.is_published).length;
 
-  const listItems: AdminStoreListItem[] = storesWithPlace.map((store) => ({
-    id: store.id,
-    name: store.place?.name ?? "（Places情報取得失敗）",
-    areaName: store.area_id ? AREA_ID_TO_NAME.get(store.area_id) ?? "-" : "-",
-    tagCount: store.store_tags?.length ?? 0,
-    is_published: store.is_published,
-    is_hidden: store.is_hidden,
-    is_real_store: store.is_real_store,
-  }));
+  const listItems: AdminStoreListItem[] = storesWithPlace.map((store) => {
+    const hasStyleOrCategoryTag = (store.store_tags ?? []).some((t) =>
+      styleOrCategoryTagIds.has(t.tag_id)
+    );
+    return {
+      id: store.id,
+      name: store.place?.name ?? "（Places情報取得失敗）",
+      areaName: store.area_id ? AREA_ID_TO_NAME.get(store.area_id) ?? "-" : "-",
+      tagCount: store.store_tags?.length ?? 0,
+      is_published: store.is_published,
+      is_hidden: store.is_hidden,
+      is_real_store: store.is_real_store,
+      aiInferenceFailed: store.ai_last_inferred_at !== null && !hasStyleOrCategoryTag,
+    };
+  });
 
   return (
     <div className="space-y-4">

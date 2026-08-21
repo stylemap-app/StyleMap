@@ -26,7 +26,7 @@ export async function runBatchAiForStore(storeId: string): Promise<BatchAiResult
 
   const { data: store } = await supabase
     .from("stores")
-    .select("google_place_id, is_real_store")
+    .select("google_place_id, is_real_store, search_keyword")
     .eq("id", storeId)
     .eq("is_real_store", true) // 実店舗のみ対象という安全ガード
     .maybeSingle();
@@ -45,6 +45,7 @@ export async function runBatchAiForStore(storeId: string): Promise<BatchAiResult
     address: place.formattedAddress,
     placeTypes: place.types ?? [],
     priceLevel: place.priceLevel,
+    searchKeyword: store.search_keyword ?? undefined,
   });
 
   if (!result) {
@@ -93,14 +94,19 @@ export async function runBatchAiForStore(storeId: string): Promise<BatchAiResult
       .insert(idsToInsert.map((tagId) => ({ store_id: storeId, tag_id: tagId })));
   }
 
-  // 価格帯はPlaces実データ（priceLevel）から決まった場合のみ更新する
-  if (result.price_range !== null) {
-    await supabase
-      .from("stores")
-      .update({ price_range: result.price_range })
-      .eq("id", storeId)
-      .eq("is_real_store", true);
-  }
+  // 価格帯はPlaces実データ（priceLevel）から決まった場合のみ更新する。
+  // ai_last_inferred_at は結果の中身に関わらず常に更新する
+  // （「AIで試したが空だった」ことを記録し、/admin・/admin/batch-ai の
+  //  「AI判定不能」表示の判定材料にする。個別編集画面のAI推定は
+  //  DBに何も保存しない設計のためここでは更新しない）
+  await supabase
+    .from("stores")
+    .update({
+      ...(result.price_range !== null ? { price_range: result.price_range } : {}),
+      ai_last_inferred_at: new Date().toISOString(),
+    })
+    .eq("id", storeId)
+    .eq("is_real_store", true);
 
   revalidatePath("/admin");
   revalidatePath("/admin/batch-ai");

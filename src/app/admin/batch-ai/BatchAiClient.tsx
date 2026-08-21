@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { runBatchAiForStore } from "./actions";
 
 const COST_PER_STORE_JPY = 0.5;
@@ -10,6 +11,8 @@ export type BatchAiTargetStore = {
   id: string;
   name: string;
   areaName: string;
+  // AIを一度実行済みだが系統・商品カテゴリとも0件だった（手動タグ付けが必要）
+  aiInferenceFailed: boolean;
 };
 
 type ResultItem = {
@@ -95,6 +98,7 @@ export default function BatchAiClient({ targets }: { targets: BatchAiTargetStore
 
   const successCount = results.filter((r) => r.success).length;
   const failureCount = results.filter((r) => !r.success).length;
+  const aiFailedTargets = targets.filter((t) => t.aiInferenceFailed);
 
   return (
     <div className="space-y-4 pb-10">
@@ -106,6 +110,25 @@ export default function BatchAiClient({ targets }: { targets: BatchAiTargetStore
       <p className="text-xs text-gray-500">
         系統タグが未設定の実店舗が対象です。系統・商品カテゴリ・価格帯のみを推定してDBへ保存します（雰囲気タグ・客層タグ・公開状態は変更しません）。
       </p>
+
+      {aiFailedTargets.length > 0 && (
+        <div className="rounded-card bg-gray-100 border border-gray-300 p-3 space-y-2">
+          <p className="text-xs text-ink font-medium">
+            AI判定不能: {aiFailedTargets.length}件（手動でタグ付けが必要）
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {aiFailedTargets.map((t) => (
+              <Link
+                key={t.id}
+                href={`/admin/stores/${t.id}`}
+                className="text-[11px] px-2 py-1 rounded-button bg-white border border-gray-300 text-ink active:opacity-70"
+              >
+                {t.name} →
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {targets.length === 0 ? (
         <p className="text-sm text-gray-400">対象の店舗はありません</p>
@@ -141,7 +164,14 @@ export default function BatchAiClient({ targets }: { targets: BatchAiTargetStore
                     className="shrink-0"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-ink truncate">{t.name}</p>
+                    <p className="text-sm font-medium text-ink truncate">
+                      {t.name}
+                      {t.aiInferenceFailed && (
+                        <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 font-medium">
+                          AI判定不能
+                        </span>
+                      )}
+                    </p>
                     <p className="text-xs text-gray-500">{t.areaName}</p>
                     {result && (
                       <p

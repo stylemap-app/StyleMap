@@ -67,10 +67,15 @@ export default function BulkRegisterClient() {
 
   const handleRegister = () => {
     setError(null);
-    const targetIds = Array.from(selected);
+    const targetItems = results
+      .filter((r) => selected.has(r.placeId))
+      .map((r) => ({
+        placeId: r.placeId,
+        searchKeyword: r.matchedKeywords.length > 0 ? r.matchedKeywords.join(",") : null,
+      }));
     startRegisterTransition(async () => {
       try {
-        const { insertedCount } = await bulkRegisterStores(targetIds, areaSlug);
+        const { insertedCount } = await bulkRegisterStores(targetItems, areaSlug);
         setRegisteredMessage(`${insertedCount}件登録しました（非公開状態。/admin から公開してください）`);
         setResults((prev) => prev.filter((r) => !selected.has(r.placeId)));
         setSelected(new Set());

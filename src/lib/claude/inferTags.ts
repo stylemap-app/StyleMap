@@ -27,7 +27,8 @@ export type TagInferenceInput = {
   address: string;
   placeTypes: string[];
   priceLevel?: string; // Places API (New) のenum文字列
-  // Bulk検索から辿ってきた場合のキーワード。単体登録など出所不明な場合は省略可
+  // 店舗登録時にヒットしたPlaces Text Searchのキーワード（stores.search_keyword）。
+  // 補助情報として使うのみで、決定的な根拠にはしない（プロンプト側で明示）
   searchKeyword?: string;
 };
 
@@ -62,6 +63,16 @@ function buildSystemPrompt(tags: { style: TagRow[]; category: TagRow[] }): strin
   主観的な評価は一切行わないでください（そもそも候補にも含まれていません）。
 - 候補一覧に存在しないslugは絶対に返さないでください。
 - 情報が少なく判断に迷う場合は無理に埋めず、空配列を返してください。
+
+検索キーワードについて:
+- 入力に「検索キーワード」が含まれる場合、それは店舗を見つけた際に
+  使った補助情報であり、決定的な根拠ではありません。
+- 「古着屋」のようにジャンルを直接示すキーワードは、他の情報と
+  矛盾しなければ系統タグの手がかりとして使ってよいです。
+- 「アパレル」「セレクトショップ」のような一般的すぎるキーワードからは、
+  特定の系統を断定しないでください（アパレル店・セレクトショップは
+  ストリートにも古着にもモードにもなり得るため）。
+- 確証が持てない場合は、検索キーワードがあっても空配列を返してください。
 
 【系統タグ候補（style_tags）】
 ${formatTagList(tags.style)}

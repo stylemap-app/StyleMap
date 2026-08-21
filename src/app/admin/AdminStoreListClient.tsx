@@ -15,6 +15,8 @@ export type AdminStoreListItem = {
   is_published: boolean;
   is_hidden: boolean;
   is_real_store: boolean;
+  // 一括AIタグ推定を実行済みだが系統・商品カテゴリとも0件だった
+  aiInferenceFailed: boolean;
 };
 
 export default function AdminStoreListClient({ stores }: { stores: AdminStoreListItem[] }) {
@@ -124,6 +126,11 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                 {!store.is_published && (
                   <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-clay text-paper font-medium">
                     未公開
+                  </span>
+                )}
+                {store.aiInferenceFailed && (
+                  <span className="inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 font-medium">
+                    AI判定不能
                   </span>
                 )}
               </p>

@@ -3,6 +3,13 @@ import type { PlaceData, PlaceSearchResult } from "@/types/store";
 
 const PLACES_API_BASE = "https://places.googleapis.com/v1";
 
+// place_cache に保存するPlaceDataの「形」が変わるたび（=DETAILS_FIELD_MASKに
+// フィールドを追加/削除するたび）にインクリメントする。cache.ts側でこの値と
+// 保存済みキャッシュの schema_version を比較し、不一致なら期限切れ扱いにする。
+// これにより、FieldMaskを変更しても古いキャッシュが最大30日間そのまま
+// 返り続ける問題を防げる（typesフィールド追加時に実際に発生した不具合の対策）
+export const PLACE_SCHEMA_VERSION = 2;
+
 const DETAILS_FIELD_MASK = [
   "id",
   "displayName",

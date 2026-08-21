@@ -1,26 +1,30 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { fetchPlaceDetails } from "./client";
+import { fetchPlaceDetails, PLACE_SCHEMA_VERSION } from "./client";
 import type { PlaceData } from "@/types/store";
 
 const CACHE_DAYS = 30;
 
-// 期限内ならキャッシュを返す。なければ null（API取得はしない）
+// 期限内かつ現在のスキーマバージョンと一致するならキャッシュを返す。
+// それ以外（期限切れ／FieldMask変更でスキーマが古い）は null（API取得はしない）
 export async function getCachedPlace(placeId: string): Promise<PlaceData | null> {
   const supabase = createAdminClient();
   const { data } = await supabase
     .from("place_cache")
-    .select("data, expires_at")
+    .select("data, expires_at, schema_version")
     .eq("place_id", placeId)
     .maybeSingle();
 
   if (!data) return null;
   if (new Date(data.expires_at) <= new Date()) return null;
+  // FieldMaskを変更してPLACE_SCHEMA_VERSIONをインクリメントすると、
+  // 古いバージョンで保存されたキャッシュは自動的に期限切れ扱いになる
+  if (data.schema_version !== PLACE_SCHEMA_VERSION) return null;
 
   return data.data as PlaceData;
 }
 
-// 30日期限でキャッシュに保存（upsert）
+// 30日期限でキャッシュに保存（upsert）。現在のスキーマバージョンを記録する
 export async function setCachedPlace(placeId: string, data: PlaceData): Promise<void> {
   const supabase = createAdminClient();
   const expiresAt = new Date(
@@ -33,6 +37,7 @@ export async function setCachedPlace(placeId: string, data: PlaceData): Promise<
       data,
       fetched_at: new Date().toISOString(),
       expires_at: expiresAt,
+      schema_version: PLACE_SCHEMA_VERSION,
     },
     { onConflict: "place_id" }
   );
@@ -62,7 +67,8 @@ export async function getPlacesWithCache(
     .from("place_cache")
     .select("place_id, data")
     .in("place_id", uniqueIds)
-    .gte("expires_at", new Date().toISOString());
+    .gte("expires_at", new Date().toISOString())
+    .eq("schema_version", PLACE_SCHEMA_VERSION);
 
   const cachedIds = new Set<string>();
   for (const row of cachedRows ?? []) {

@@ -63,7 +63,8 @@ export async function searchStores(
 // 自動遷移させるために呼び出し元（AdminStoreSearch）で使う
 export async function registerStore(
   placeId: string,
-  areaSlug: string
+  areaSlug: string,
+  searchKeyword: string
 ): Promise<string> {
   const user = await getAdminUser();
   if (!user) throw new Error("Forbidden");
@@ -78,6 +79,8 @@ export async function registerStore(
       is_real_store: true,
       is_published: false,
       area_id: areaId,
+      // AI推定の補助情報として保存する検索キーワード
+      search_keyword: searchKeyword.trim() || null,
     })
     .select("id")
     .single();

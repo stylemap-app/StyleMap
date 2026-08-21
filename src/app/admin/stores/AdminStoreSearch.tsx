@@ -32,7 +32,7 @@ export default function AdminStoreSearch() {
     setRegisteringId(placeId);
     setError(null);
     try {
-      const storeId = await registerStore(placeId, areaSlug);
+      const storeId = await registerStore(placeId, areaSlug, query);
       // 登録して終わりにしない：そのままタグ編集・公開画面へ遷移させる
       router.push(`/admin/stores/${storeId}`);
     } catch (err) {
