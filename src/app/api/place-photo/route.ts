@@ -8,6 +8,15 @@ const MIN_WIDTH = 100;
 const MAX_WIDTH = 1600;
 const DEFAULT_WIDTH = 800;
 
+// Places写真リソース（photo name）は基本的に不変なので30日間キャッシュする。
+// max-age はブラウザ向け、s-maxage はVercel Edge Network/CDN向けの明示値
+// （両者を同じ値にして挙動を揃える）。stale-while-revalidate により、
+// 期限直後でも古いキャッシュを即返しつつ裏で再検証できる。
+// PV数に比例してGoogle Places Photo APIの課金が増える構造のため、
+// CDNキャッシュが利く2回目以降のアクセスではGoogleへ到達させない
+const CACHE_CONTROL =
+  "public, max-age=2592000, s-maxage=2592000, stale-while-revalidate=86400, immutable";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name");
@@ -43,11 +52,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "photo fetch failed" }, { status: 502 });
   }
 
-  return new NextResponse(upstream.body, {
-    headers: {
-      "Content-Type": upstream.headers.get("Content-Type") ?? "image/jpeg",
-      // Places写真リソースは不変なので長期キャッシュ（place_cacheの期限とは独立でよい）
-      "Cache-Control": "public, max-age=2592000, immutable",
-    },
-  });
+  const headers: Record<string, string> = {
+    "Content-Type": upstream.headers.get("Content-Type") ?? "image/jpeg",
+    // Places写真リソースは不変なので長期キャッシュ（place_cacheの期限とは独立でよい）
+    "Cache-Control": CACHE_CONTROL,
+  };
+  // Google側にETagが付与されていれば引き継ぐ（あれば条件付きリクエストに使える。
+  // なくても immutable + max-age により実害はない）
+  const upstreamEtag = upstream.headers.get("ETag");
+  if (upstreamEtag) headers["ETag"] = upstreamEtag;
+
+  return new NextResponse(upstream.body, { headers });
 }
