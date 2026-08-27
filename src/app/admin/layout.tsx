@@ -29,6 +29,9 @@ export default async function AdminLayout({
           <Link href="/admin/dummy" className="text-xs text-paper/70 active:opacity-70">
             ダミー店舗
           </Link>
+          <Link href="/admin/survey" className="text-xs text-paper/70 active:opacity-70">
+            現地調査
+          </Link>
         </div>
         <Link href="/" className="text-xs text-paper/70 active:opacity-70">
           サイトに戻る

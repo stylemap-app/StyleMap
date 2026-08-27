@@ -51,6 +51,31 @@ export async function bulkSetPublished(
   return { updatedCount: data?.length ?? 0 };
 }
 
+// 一覧のチェックボックス選択から複数店舗をまとめて現地調査ステータスを
+// 変更する。is_real_store=true をクエリ条件に含め、ダミー店舗には
+// 影響しないことをDBクエリレベルで保証する
+export async function bulkSetSurveyStatus(
+  storeIds: string[],
+  surveyStatus: "not_started" | "planned" | "visited" | "excluded"
+): Promise<{ updatedCount: number }> {
+  const user = await getAdminUser();
+  if (!user) throw new Error("Forbidden");
+  if (storeIds.length === 0) return { updatedCount: 0 };
+
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .from("stores")
+    .update({ survey_status: surveyStatus })
+    .in("id", storeIds)
+    .eq("is_real_store", true)
+    .select("id");
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
+  return { updatedCount: data?.length ?? 0 };
+}
+
 // is_hidden（一時的な非表示。データは残る）とは別の完全削除。
 // store_tags / store_photos / favorites / reviews / clothes は
 // すべて stores(id) に ON DELETE CASCADE を張っているため、

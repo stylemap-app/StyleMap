@@ -2,11 +2,14 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { mergeStoresWithPlaces } from "@/lib/places/merge";
 import type { Store } from "@/types/store";
+import type { SurveyStatus } from "@/lib/surveyStatus";
 import { AREAS, AREA_ID_MAP } from "@/lib/areas";
 import AdminStoreListClient, { type AdminStoreListItem } from "./AdminStoreListClient";
 
 type AdminStoreRow = Store & {
   area_id: string | null;
+  ai_last_inferred_at: string | null;
+  survey_status: SurveyStatus;
   store_tags?: { tag_id: number }[];
 };
 
@@ -29,14 +32,12 @@ export default async function AdminDashboardPage() {
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, name, address, lat, lng, nearest_station, price_range, hours, links, operator_review, is_published, is_hidden, is_real_store, google_place_id, area_id, created_at, ai_last_inferred_at, store_tags(tag_id)"
+      "id, name, address, lat, lng, nearest_station, price_range, hours, links, operator_review, is_published, is_hidden, is_real_store, google_place_id, area_id, created_at, ai_last_inferred_at, survey_status, store_tags(tag_id)"
     )
     .eq("is_real_store", true)
     .order("created_at", { ascending: false });
 
-  const rows = (data ?? []) as unknown as (AdminStoreRow & {
-    ai_last_inferred_at: string | null;
-  })[];
+  const rows = (data ?? []) as unknown as AdminStoreRow[];
   const storesWithPlace = await mergeStoresWithPlaces(rows);
   const unpublishedCount = storesWithPlace.filter((s) => !s.is_published).length;
 
@@ -53,8 +54,16 @@ export default async function AdminDashboardPage() {
       is_hidden: store.is_hidden,
       is_real_store: store.is_real_store,
       aiInferenceFailed: store.ai_last_inferred_at !== null && !hasStyleOrCategoryTag,
+      surveyStatus: store.survey_status,
     };
   });
+
+  const surveyCounts = {
+    not_started: listItems.filter((s) => s.surveyStatus === "not_started").length,
+    planned: listItems.filter((s) => s.surveyStatus === "planned").length,
+    visited: listItems.filter((s) => s.surveyStatus === "visited").length,
+    excluded: listItems.filter((s) => s.surveyStatus === "excluded").length,
+  };
 
   return (
     <div className="space-y-4">
@@ -71,6 +80,16 @@ export default async function AdminDashboardPage() {
       {unpublishedCount > 0 && (
         <div className="rounded-card bg-clay/10 border border-clay/30 px-3 py-2 text-xs text-clay font-medium">
           未公開の店舗が{unpublishedCount}件あります
+        </div>
+      )}
+
+      {listItems.length > 0 && (
+        <div className="rounded-card bg-white shadow-card px-3 py-2 text-xs text-gray-600">
+          現地調査：未着手 {surveyCounts.not_started}件 / 訪問予定 {surveyCounts.planned}件 /
+          訪問済み {surveyCounts.visited}件 / 対象外 {surveyCounts.excluded}件
+          <Link href="/admin/survey" className="ml-2 text-clay font-medium underline">
+            調査画面へ
+          </Link>
         </div>
       )}
 
