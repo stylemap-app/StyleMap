@@ -1,15 +1,9 @@
 import Link from "next/link";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
 import type { PriceRange } from "@/types/store";
+import { PRICE_SYMBOL } from "@/lib/priceRange";
 import { VIBE_BADGE_LABEL } from "@/lib/vibes";
 import FavoriteButton from "@/components/auth/FavoriteButton";
-
-const PRICE_SYMBOLS: Record<PriceRange, string> = {
-  1: "¥",
-  2: "¥¥",
-  3: "¥¥¥",
-  4: "¥¥¥¥",
-};
 
 type Props = {
   id: string;
@@ -130,7 +124,7 @@ export default function StoreListCard({
 
         <div className="flex items-center justify-between mt-2">
           <span className="font-price text-xs text-gray-500">
-            {PRICE_SYMBOLS[priceRange]}
+            {PRICE_SYMBOL[priceRange]}
           </span>
           <div className="flex items-center gap-2">
             {avgRating && avgRating > 0 && (

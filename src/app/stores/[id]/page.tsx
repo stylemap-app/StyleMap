@@ -10,22 +10,9 @@ import PolicyLink from "@/components/store/PolicyLink";
 import FavoriteButton from "@/components/auth/FavoriteButton";
 import BackButton from "@/components/layout/BackButton";
 import type { PriceRange, Store, StoreLinks, TagType } from "@/types/store";
+import { PRICE_SYMBOL, PRICE_AMOUNT_LABEL } from "@/lib/priceRange";
 import { mergeStoreWithPlace } from "@/lib/places/merge";
 import { getPlacePhotoUrl } from "@/lib/places/photo";
-
-const PRICE_SYMBOLS: Record<PriceRange, string> = {
-  1: "¥",
-  2: "¥¥",
-  3: "¥¥¥",
-  4: "¥¥¥¥",
-};
-
-const PRICE_LABELS: Record<PriceRange, string> = {
-  1: "〜¥3,000",
-  2: "¥3,000〜¥8,000",
-  3: "¥8,000〜¥20,000",
-  4: "¥20,000〜",
-};
 
 const VIBE_CHECKLIST: Record<string, string> = {
   "easy-solo":          "一人でふらっと入れる",
@@ -300,7 +287,7 @@ export default async function StorePage({
             </span>
           ))}
           <span className="text-xs bg-ink text-paper px-2.5 py-1 rounded-full font-price">
-            {PRICE_SYMBOLS[priceRange]}&ensp;{PRICE_LABELS[priceRange]}
+            {PRICE_SYMBOL[priceRange]}&ensp;{PRICE_AMOUNT_LABEL[priceRange]}
           </span>
           {place.rating && (
             <span className="text-xs bg-gray-100 text-ink px-2.5 py-1 rounded-full">

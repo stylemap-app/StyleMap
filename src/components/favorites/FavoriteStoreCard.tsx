@@ -1,15 +1,8 @@
 import Link from "next/link";
 import ImageWithFallback from "@/components/ui/ImageWithFallback";
-import type { PriceRange } from "@/types/store";
 import type { FavoriteStore } from "@/lib/favorites";
+import { PRICE_SYMBOL } from "@/lib/priceRange";
 import FavoriteButton from "@/components/auth/FavoriteButton";
-
-const PRICE_SYMBOLS: Record<PriceRange, string> = {
-  1: "¥",
-  2: "¥¥",
-  3: "¥¥¥",
-  4: "¥¥¥¥",
-};
 
 type Props = {
   store: FavoriteStore;
@@ -37,7 +30,7 @@ export default function FavoriteStoreCard({ store, onActionComplete }: Props) {
           </p>
           <div className="flex items-center justify-between mt-1">
             <span className="font-price text-[11px] text-gray-500">
-              {PRICE_SYMBOLS[store.priceRange]}
+              {PRICE_SYMBOL[store.priceRange]}
             </span>
             {store.entryScore > 0 && (
               <div

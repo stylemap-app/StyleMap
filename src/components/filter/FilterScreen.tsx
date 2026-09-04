@@ -1,15 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { TagMaster, PriceRange } from "@/types/store";
+import type { TagMaster } from "@/types/store";
 import { EMPTY_FILTER, type FilterState } from "@/lib/filter";
-
-const PRICE_OPTIONS: { value: PriceRange; symbol: string; label: string }[] = [
-  { value: 1, symbol: "¥",    label: "〜¥3,000" },
-  { value: 2, symbol: "¥¥",   label: "¥3,000〜¥8,000" },
-  { value: 3, symbol: "¥¥¥",  label: "¥8,000〜¥20,000" },
-  { value: 4, symbol: "¥¥¥¥", label: "¥20,000〜" },
-];
+import { PRICE_RANGE_OPTIONS } from "@/lib/priceRange";
 
 type Props = {
   isOpen: boolean;
@@ -121,7 +115,7 @@ export default function FilterScreen({
             価格帯
           </h3>
           <div className="grid grid-cols-4 gap-2">
-            {PRICE_OPTIONS.map(({ value, symbol, label }) => {
+            {PRICE_RANGE_OPTIONS.map(({ value, symbol, description }) => {
               const active = draft.prices.includes(value);
               return (
                 <div key={value} className="flex flex-col items-center gap-1.5">
@@ -141,7 +135,7 @@ export default function FilterScreen({
                     {symbol}
                   </button>
                   <span className="text-[9px] text-gray-500 text-center leading-tight">
-                    {label}
+                    {description}
                   </span>
                 </div>
               );

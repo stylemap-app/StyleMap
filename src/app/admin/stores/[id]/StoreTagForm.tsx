@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import type { PriceRange, TagMaster } from "@/types/store";
+import { PRICE_RANGE_OPTIONS } from "@/lib/priceRange";
 import { saveStoreTags } from "./actions";
-
-const PRICE_OPTIONS: { value: PriceRange; symbol: string; label: string }[] = [
-  { value: 1, symbol: "¥", label: "〜¥3,000" },
-  { value: 2, symbol: "¥¥", label: "¥3,000〜¥8,000" },
-  { value: 3, symbol: "¥¥¥", label: "¥8,000〜¥20,000" },
-  { value: 4, symbol: "¥¥¥¥", label: "¥20,000〜" },
-];
 
 type Props = {
   storeId: string;
@@ -88,7 +82,7 @@ export default function StoreTagForm({
           価格帯
         </h2>
         <div className="flex flex-wrap gap-3">
-          {PRICE_OPTIONS.map((opt) => (
+          {PRICE_RANGE_OPTIONS.map((opt) => (
             <label key={opt.value} className="flex items-center gap-1.5 text-sm text-ink">
               <input
                 type="radio"
@@ -97,7 +91,7 @@ export default function StoreTagForm({
                 checked={priceRange === opt.value}
                 onChange={() => setPriceRange(opt.value)}
               />
-              {opt.symbol}
+              {opt.symbol}&ensp;{opt.amountLabel}
             </label>
           ))}
         </div>

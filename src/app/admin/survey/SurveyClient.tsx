@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PriceRange, TagMaster } from "@/types/store";
+import { PRICE_RANGE_OPTIONS, PRICE_JUDGING_CRITERIA } from "@/lib/priceRange";
 import {
   SURVEY_STATUS_LABEL,
   SURVEY_STATUS_BADGE_CLASS,
@@ -23,13 +24,6 @@ export type SurveyStore = {
   priceRange: PriceRange | null;
   operatorReview: string;
 };
-
-const PRICE_OPTIONS: { value: PriceRange; symbol: string }[] = [
-  { value: 1, symbol: "¥" },
-  { value: 2, symbol: "¥¥" },
-  { value: 3, symbol: "¥¥¥" },
-  { value: 4, symbol: "¥¥¥¥" },
-];
 
 type SortMode = "distance" | "name";
 
@@ -58,6 +52,7 @@ export default function SurveyClient({
   const [memo, setMemo] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showPriceCriteria, setShowPriceCriteria] = useState(false);
 
   const filteredStores = useMemo(() => {
     let list = stores.filter((s) => {
@@ -272,22 +267,42 @@ export default function SurveyClient({
         />
 
         <section>
-          <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
-            価格帯
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label">
+              価格帯
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowPriceCriteria((v) => !v)}
+              className="text-[11px] text-clay underline active:opacity-70"
+            >
+              {showPriceCriteria ? "基準を閉じる" : "基準を見る"}
+            </button>
+          </div>
+
+          {showPriceCriteria && (
+            <ul className="mb-2 rounded-button bg-gray-100 px-3 py-2 space-y-0.5">
+              {PRICE_JUDGING_CRITERIA.map((line) => (
+                <li key={line} className="text-[11px] text-gray-600 leading-snug">
+                  {line}
+                </li>
+              ))}
+            </ul>
+          )}
+
           <div className="flex flex-wrap gap-2">
-            {PRICE_OPTIONS.map((opt) => (
+            {PRICE_RANGE_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={() => setPriceRange(opt.value)}
-                className={`min-h-[44px] min-w-[44px] px-4 rounded-button text-sm font-medium border ${
+                className={`min-h-[44px] px-4 rounded-button text-sm font-medium border ${
                   priceRange === opt.value
                     ? "bg-clay text-paper border-clay"
                     : "bg-white text-ink border-gray-300"
                 }`}
               >
-                {opt.symbol}
+                {opt.symbol}&ensp;{opt.amountLabel}
               </button>
             ))}
           </div>
