@@ -31,8 +31,9 @@ export default async function AdminSurveyPage() {
 
   const { data: tagMasterRows } = await supabase
     .from("tag_masters")
-    .select("id, type, slug, label_ja, sort_order")
+    .select("id, type, slug, label_ja, sort_order, is_active")
     .in("type", ["style", "vibe", "gender", "age_group"])
+    .eq("is_active", true)
     .order("type")
     .order("sort_order");
 

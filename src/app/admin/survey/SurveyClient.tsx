@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { PriceRange, TagMaster } from "@/types/store";
 import { PRICE_RANGE_OPTIONS, PRICE_JUDGING_CRITERIA } from "@/lib/priceRange";
+import { VIBE_GUIDE, VIBE_GUIDE_RULES } from "@/lib/vibeGuide";
 import {
   SURVEY_STATUS_LABEL,
   SURVEY_STATUS_BADGE_CLASS,
@@ -53,6 +54,7 @@ export default function SurveyClient({
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showPriceCriteria, setShowPriceCriteria] = useState(false);
+  const [showVibeGuide, setShowVibeGuide] = useState(false);
 
   const filteredStores = useMemo(() => {
     let list = stores.filter((s) => {
@@ -308,12 +310,62 @@ export default function SurveyClient({
           </div>
         </section>
 
-        <TagSection
-          title="雰囲気タグ"
-          tags={byType("vibe")}
-          selectedIds={selectedTagIds}
-          onToggle={toggleTag}
-        />
+        <section>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label">
+              雰囲気タグ
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowVibeGuide((v) => !v)}
+              className="text-[11px] text-clay underline active:opacity-70"
+            >
+              {showVibeGuide ? "判定ガイドを閉じる" : "判定ガイドを見る"}
+            </button>
+          </div>
+
+          {showVibeGuide && (
+            <div className="mb-2 rounded-button bg-gray-100 px-3 py-2 space-y-3">
+              {byType("vibe").map((tag) => {
+                const guide = VIBE_GUIDE[tag.slug];
+                if (!guide) return null;
+                return (
+                  <div key={tag.slug}>
+                    <p className="text-[11px] font-semibold text-ink">{tag.label_ja}</p>
+                    <p className="text-[11px] text-gray-600 leading-snug">{guide.core}</p>
+                    <p className="text-[10px] text-gray-500 leading-snug">
+                      観点：{guide.points.join(" / ")}
+                    </p>
+                  </div>
+                );
+              })}
+              <ul className="pt-2 border-t border-gray-200 space-y-0.5">
+                {VIBE_GUIDE_RULES.map((line) => (
+                  <li key={line} className="text-[11px] text-gray-600 leading-snug">
+                    ・{line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            {byType("vibe").map((tag) => (
+              <button
+                key={tag.id}
+                type="button"
+                onClick={() => toggleTag(tag.id)}
+                className={`min-h-[44px] px-4 rounded-button text-sm font-medium border ${
+                  selectedTagIds.has(tag.id)
+                    ? "bg-clay text-paper border-clay"
+                    : "bg-white text-ink border-gray-300"
+                }`}
+              >
+                {tag.label_ja}
+              </button>
+            ))}
+          </div>
+        </section>
         <TagSection
           title="客層タグ"
           tags={[...byType("gender"), ...byType("age_group")]}

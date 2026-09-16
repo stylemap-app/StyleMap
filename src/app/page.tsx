@@ -41,8 +41,9 @@ export default async function Home({
       areaId ? storeQueryBase.eq("area_id", areaId) : storeQueryBase,
       supabase
         .from("tag_masters")
-        .select("id, type, slug, label_ja, sort_order")
+        .select("id, type, slug, label_ja, sort_order, is_active")
         .in("type", ["style", "vibe", "gender"])
+        .eq("is_active", true)
         .order("type")
         .order("sort_order"),
       supabase.from("reviews").select("store_id, rating"),

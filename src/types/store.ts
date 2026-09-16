@@ -18,6 +18,7 @@ export interface TagMaster {
   slug: string;     // URLやフィルターキーに使う英数字識別子
   label_ja: string; // 画面表示用の日本語ラベル
   sort_order: number;
+  is_active: boolean; // 選択肢として表示するか（falseでも既存店舗への紐付けは残る）
 }
 
 // 1日分の営業時間（open/close が null = 定休日）

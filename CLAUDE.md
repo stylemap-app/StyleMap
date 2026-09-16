@@ -135,6 +135,32 @@ ADMIN_USER_IDS に自分の Supabase user_id が
 - Places APIのデータは表示のみに使用し、
   それを元に新しい情報を作らない
 
+## タグの追加・変更方法
+
+タグは tag_masters テーブルで管理しており、
+コード変更なしで追加・変更できる。
+
+追加：
+  INSERT INTO tag_masters (type, slug, label_ja, sort_order, is_active)
+  VALUES ('vibe', 'new-slug', 'ラベル', 90, true);
+
+非表示化：
+  UPDATE tag_masters SET is_active = false WHERE slug = 'xxx';
+  ※削除はしない（既存店舗のタグを壊さないため）
+
+type の種類：
+  style（系統）/ vibe（雰囲気）/ category（商品カテゴリ）/
+  gender（性別）/ age_group（年齢層）
+
+is_active = false のタグは選択肢一覧（/admin/survey、
+/admin/stores/[id]のタグ編集、フィルター画面）には出さないが、
+既存店舗に付いているタグは store_tags 側に残るため、
+店舗詳細ページの表示は壊れない
+（店舗詳細は is_active でフィルタしていない）。
+
+判定ガイドを追加する場合は
+src/lib/vibeGuide.ts にも定義を追加すること。
+
 ## ai_last_inferred_at カラムについて
 
 AI推定機能を削除した後もこのカラムは残している。
