@@ -91,9 +91,27 @@ export interface PlaceLocation {
   lng: number;
 }
 
+// 営業時間の1時点（Google Places API (New) の日付表現に準拠）
+// day: 0=日曜, 1=月曜, ..., 6=土曜
+export interface OpeningPeriodPoint {
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+// 営業時間の1区間。closeを省略した場合は24時間営業を表す
+// （Google Places APIが常時営業の店舗をこの形で返すため）
+export interface OpeningPeriod {
+  open: OpeningPeriodPoint;
+  close?: OpeningPeriodPoint;
+}
+
 export interface PlaceOpeningHours {
   weekdayDescriptions: string[];
-  openNow: boolean;
+  // 「営業中かどうか」はこの periods と表示時点の現在時刻から毎回計算する
+  // （src/lib/openingHours.ts）。Places APIのopenNowは取得時点のスナップショット
+  // でしかなく、キャッシュ経由で古い値が表示され続けるため使わない
+  periods: OpeningPeriod[];
 }
 
 export interface PlacePhoto {

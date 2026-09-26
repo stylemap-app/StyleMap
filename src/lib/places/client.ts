@@ -8,7 +8,11 @@ const PLACES_API_BASE = "https://places.googleapis.com/v1";
 // 保存済みキャッシュの schema_version を比較し、不一致なら期限切れ扱いにする。
 // これにより、FieldMaskを変更しても古いキャッシュが最大30日間そのまま
 // 返り続ける問題を防げる（typesフィールド追加時に実際に発生した不具合の対策）
-export const PLACE_SCHEMA_VERSION = 2;
+// v3: regularOpeningHours.periods を保持するようにした
+//     （openNowは取得時点のスナップショットでしかなく、キャッシュ経由で
+//      深夜でも「営業中」と表示され続けるバグの原因だったため、periodsから
+//      表示のたびに判定する方式に変更。openNowは保持・使用しない）
+export const PLACE_SCHEMA_VERSION = 3;
 
 const DETAILS_FIELD_MASK = [
   "id",
@@ -46,7 +50,14 @@ type RawPlace = {
   displayName?: { text: string; languageCode?: string };
   formattedAddress?: string;
   location?: { latitude: number; longitude: number };
-  regularOpeningHours?: { openNow?: boolean; weekdayDescriptions?: string[] };
+  regularOpeningHours?: {
+    weekdayDescriptions?: string[];
+    // 営業中判定に使う構造化データ。closeを持たないperiodは24時間営業を表す
+    periods?: {
+      open: { day: number; hour: number; minute: number };
+      close?: { day: number; hour: number; minute: number };
+    }[];
+  };
   nationalPhoneNumber?: string;
   photos?: { name: string; widthPx?: number; heightPx?: number }[];
   rating?: number;
@@ -75,7 +86,7 @@ function toPlaceData(raw: RawPlace): PlaceData {
     openingHours: raw.regularOpeningHours
       ? {
           weekdayDescriptions: raw.regularOpeningHours.weekdayDescriptions ?? [],
-          openNow: raw.regularOpeningHours.openNow ?? false,
+          periods: raw.regularOpeningHours.periods ?? [],
         }
       : undefined,
     nationalPhoneNumber: raw.nationalPhoneNumber,

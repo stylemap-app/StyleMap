@@ -1,5 +1,5 @@
 import "server-only";
-import type { Store, PlaceData, PlaceOpeningHours } from "@/types/store";
+import type { Store, PlaceData, PlaceOpeningHours, OpeningPeriod } from "@/types/store";
 import { getPlaceWithCache, getPlacesWithCache } from "./cache";
 
 // 月曜始まり。Places API (New) の regularOpeningHours.weekdayDescriptions と
@@ -11,7 +11,7 @@ const WEEKDAY_JA_MON_FIRST = ["月", "火", "水", "木", "金", "土", "日"] a
 function storeHoursToPlaceOpeningHours(store: Store): PlaceOpeningHours {
   const regular = store.hours?.regular;
   if (!regular || regular.length !== 7) {
-    return { weekdayDescriptions: [], openNow: false };
+    return { weekdayDescriptions: [], periods: [] };
   }
 
   // regular[0]=日曜 なので、月曜始まりの並びに入れ替える
@@ -22,21 +22,31 @@ function storeHoursToPlaceOpeningHours(store: Store): PlaceOpeningHours {
     return `${label}曜日: ${day.open}〜${day.close}`;
   });
 
-  // JST基準で「現在営業中か」を判定
-  const jstNow = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
-  const today = regular[jstNow.getDay()];
-  let openNow = false;
-  if (today.open && today.close) {
-    const [openH, openM] = today.open.split(":").map(Number);
-    const [closeH, closeM] = today.close.split(":").map(Number);
-    const nowMinutes = jstNow.getHours() * 60 + jstNow.getMinutes();
-    openNow =
-      nowMinutes >= openH * 60 + openM && nowMinutes < closeH * 60 + closeM;
-  }
+  return { weekdayDescriptions, periods: storeHoursToPeriods(regular) };
+}
 
-  return { weekdayDescriptions, openNow };
+// StyleMap独自の StoreHours（日曜始まり、index 0=日曜）を、
+// 営業中判定用の OpeningPeriod[]（day: 0=日曜〜6=土曜、Google Places準拠）に変換する。
+// indexがそのまま 0=日曜〜6=土曜 に対応するため、曜日の入れ替えは不要
+function storeHoursToPeriods(regular: NonNullable<Store["hours"]>["regular"]): OpeningPeriod[] {
+  const periods: OpeningPeriod[] = [];
+  regular.forEach((day, index) => {
+    if (!day.open || !day.close) return; // 定休日
+    const [openHour, openMinute] = day.open.split(":").map(Number);
+    const [closeHour, closeMinute] = day.close.split(":").map(Number);
+    // 閉店時刻が開店時刻以前なら、日をまたぐ営業（例: 20:00〜翌2:00）とみなす
+    const closesNextDay =
+      closeHour < openHour || (closeHour === openHour && closeMinute <= openMinute);
+    periods.push({
+      open: { day: index, hour: openHour, minute: openMinute },
+      close: {
+        day: closesNextDay ? (index + 1) % 7 : index,
+        hour: closeHour,
+        minute: closeMinute,
+      },
+    });
+  });
+  return periods;
 }
 
 // ダミー店舗のDB値をPlaceData形式に変換する。

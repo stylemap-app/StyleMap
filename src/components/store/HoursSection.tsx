@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { PlaceOpeningHours } from "@/types/store";
+import { getOpeningStatus, formatOpeningStatus, isCurrentlyOpen, getJstNow } from "@/lib/openingHours";
 
 export default function HoursSection({
   openingHours,
@@ -9,12 +10,21 @@ export default function HoursSection({
   openingHours: PlaceOpeningHours | null | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
+  // ページが静的にキャッシュされても古い判定が残らないよう、
+  // 「営業中かどうか」は表示時（クライアントでのマウント時）に毎回計算する。
+  // サーバー側の初期レンダーとクライアントのhydrationで結果がズレて
+  // hydration warningにならないよう、初期値はnull（未計算）にしてマウント後に確定させる
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    setNow(getJstNow());
+  }, []);
 
   if (!openingHours || openingHours.weekdayDescriptions.length !== 7) return null;
 
   // weekdayDescriptions は月曜始まり。JSのDate.getDay()は日曜=0なので変換する
   const todayIndex = (new Date().getDay() + 6) % 7;
   const todayLine = openingHours.weekdayDescriptions[todayIndex];
+  const status = now ? getOpeningStatus(openingHours.periods, now) : null;
 
   return (
     <div>
@@ -29,13 +39,15 @@ export default function HoursSection({
       >
         <span className="text-sm text-ink">
           {todayLine}
-          <span
-            className={`ml-2 text-[11px] font-medium ${
-              openingHours.openNow ? "text-clay" : "text-gray-400"
-            }`}
-          >
-            {openingHours.openNow ? "営業中" : "営業時間外"}
-          </span>
+          {status && (
+            <span
+              className={`ml-2 text-[11px] font-medium ${
+                isCurrentlyOpen(status) ? "text-clay" : "text-gray-400"
+              }`}
+            >
+              {formatOpeningStatus(status)}
+            </span>
+          )}
         </span>
         <svg
           width="16"
