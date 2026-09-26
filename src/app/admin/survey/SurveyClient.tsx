@@ -6,13 +6,14 @@ import type { PriceRange, TagMaster } from "@/types/store";
 import { PRICE_RANGE_OPTIONS, PRICE_JUDGING_CRITERIA } from "@/lib/priceRange";
 import { VIBE_GUIDE, VIBE_GUIDE_RULES } from "@/lib/vibeGuide";
 import {
+  SURVEY_STATUSES,
   SURVEY_STATUS_LABEL,
   SURVEY_STATUS_BADGE_CLASS,
   type SurveyStatus,
 } from "@/lib/surveyStatus";
 import { haversineMeters, formatDistance, type LatLng } from "./distance";
 import StoreListModal, { type StatusFilter } from "./StoreListModal";
-import { saveSurveyResult } from "./actions";
+import { saveSurveyResult, updateSurveyStatus } from "./actions";
 
 export type SurveyStore = {
   id: string;
@@ -145,6 +146,7 @@ export default function SurveyClient({
   const [pendingDraft, setPendingDraft] = useState<SurveyDraft | null>(null);
   const [savedToast, setSavedToast] = useState<SavedToast | null>(null);
   const savedToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   const filteredStores = useMemo(() => {
     let list = stores.filter((s) => {
@@ -348,6 +350,25 @@ export default function SurveyClient({
     }
   };
 
+  // 店名横のステータスセレクトから、タグ・価格帯には触れずステータスだけを変更する
+  const handleStatusChange = async (status: SurveyStatus) => {
+    if (!currentStore) return;
+    setIsChangingStatus(true);
+    try {
+      const result = await updateSurveyStatus(currentStore.id, status);
+      if (!result.ok) {
+        setSaveError(result.message);
+        return;
+      }
+      setStores((prev) =>
+        prev.map((s) => (s.id === currentStore.id ? { ...s, surveyStatus: result.surveyStatus } : s))
+      );
+      showSavedToast({ message: `ステータスを${SURVEY_STATUS_LABEL[result.surveyStatus]}に変更しました` });
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
+
   const applyDraft = () => {
     if (!pendingDraft) return;
     setSelectedTagIds(new Set(pendingDraft.selectedTagIds));
@@ -450,11 +471,18 @@ export default function SurveyClient({
           <p className="text-xs text-gray-500 mt-1 flex items-center gap-1.5 flex-wrap">
             {currentStore.areaName}
             {distanceText && <>・{distanceText}</>}
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${SURVEY_STATUS_BADGE_CLASS[currentStore.surveyStatus]}`}
+            <select
+              value={currentStore.surveyStatus}
+              disabled={isChangingStatus}
+              onChange={(e) => handleStatusChange(e.target.value as SurveyStatus)}
+              className={`text-[10px] px-2 py-0.5 rounded-full font-medium border-0 disabled:opacity-40 ${SURVEY_STATUS_BADGE_CLASS[currentStore.surveyStatus]}`}
             >
-              {SURVEY_STATUS_LABEL[currentStore.surveyStatus]}
-            </span>
+              {SURVEY_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {SURVEY_STATUS_LABEL[status]}
+                </option>
+              ))}
+            </select>
           </p>
         </div>
 

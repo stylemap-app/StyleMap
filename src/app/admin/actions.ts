@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getAdminUser } from "@/lib/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { setSurveyStatus, type SetSurveyStatusResult } from "@/lib/admin/saveStoreProgress";
+import type { SurveyStatus } from "@/lib/surveyStatus";
 
 export async function toggleStoreHidden(storeId: string, nextHidden: boolean) {
   const user = await getAdminUser();
@@ -74,6 +76,25 @@ export async function bulkSetSurveyStatus(
 
   revalidatePath("/admin");
   return { updatedCount: data?.length ?? 0 };
+}
+
+// 一覧の各行にあるステータスセレクトから、タグ・価格帯は変更せず
+// survey_statusだけを手動で切り替える
+export async function updateSurveyStatus(
+  storeId: string,
+  status: SurveyStatus
+): Promise<SetSurveyStatusResult> {
+  const user = await getAdminUser();
+  if (!user) return { ok: false, message: "Forbidden" };
+
+  const result = await setSurveyStatus(storeId, status);
+
+  if (result.ok) {
+    revalidatePath("/admin");
+    revalidatePath(`/admin/stores/${storeId}`);
+    revalidatePath("/admin/survey");
+  }
+  return result;
 }
 
 // is_hidden（一時的な非表示。データは残る）とは別の完全削除。

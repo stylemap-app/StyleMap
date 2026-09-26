@@ -2,8 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminUser } from "@/lib/admin";
-import { saveStoreProgress, type SaveStoreProgressResult } from "@/lib/admin/saveStoreProgress";
+import {
+  saveStoreProgress,
+  setSurveyStatus,
+  type SaveStoreProgressResult,
+  type SetSurveyStatusResult,
+} from "@/lib/admin/saveStoreProgress";
 import type { PriceRange } from "@/types/store";
+import type { SurveyStatus } from "@/lib/surveyStatus";
 
 export type SaveSurveyResultInput = {
   storeId: string;
@@ -43,6 +49,25 @@ export async function saveSurveyResult(
   if (result.ok) {
     revalidatePath("/admin");
     revalidatePath(`/admin/stores/${input.storeId}`);
+    revalidatePath("/admin/survey");
+  }
+  return result;
+}
+
+// 現地調査画面の店名横のステータスセレクトから、タグ・価格帯は変更せず
+// survey_statusだけを手動で切り替える
+export async function updateSurveyStatus(
+  storeId: string,
+  status: SurveyStatus
+): Promise<SetSurveyStatusResult> {
+  const user = await getAdminUser();
+  if (!user) return { ok: false, message: "Forbidden" };
+
+  const result = await setSurveyStatus(storeId, status);
+
+  if (result.ok) {
+    revalidatePath("/admin");
+    revalidatePath(`/admin/stores/${storeId}`);
     revalidatePath("/admin/survey");
   }
   return result;

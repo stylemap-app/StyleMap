@@ -1,9 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { toggleStoreHidden, bulkSetPublished, bulkSetSurveyStatus } from "./actions";
+import {
+  toggleStoreHidden,
+  bulkSetPublished,
+  bulkSetSurveyStatus,
+  updateSurveyStatus,
+} from "./actions";
 import DeleteStoreButton from "./DeleteStoreButton";
 import PublishToggle from "./PublishToggle";
 import {
@@ -34,6 +39,9 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
   const [isBulkRunning, setIsBulkRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilterValue>("all");
+  const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const statusMessageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const visibleStores = useMemo(
     () =>
@@ -94,6 +102,24 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
     }
   };
 
+  const handleStatusChange = async (storeId: string, status: SurveyStatus) => {
+    setStatusChangingId(storeId);
+    setError(null);
+    try {
+      const result = await updateSurveyStatus(storeId, status);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+      if (statusMessageTimer.current) clearTimeout(statusMessageTimer.current);
+      setStatusMessage(`ステータスを${SURVEY_STATUS_LABEL[status]}に変更しました`);
+      statusMessageTimer.current = setTimeout(() => setStatusMessage(null), 2500);
+      router.refresh();
+    } finally {
+      setStatusChangingId(null);
+    }
+  };
+
   const runBulkSurvey = async () => {
     const targetIds = Array.from(selectedIds);
     if (targetIds.length === 0) return;
@@ -114,6 +140,11 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
 
   return (
     <div className="space-y-3">
+      {statusMessage && (
+        <div className="rounded-button bg-green-600 text-white text-sm font-medium px-4 py-2 text-center">
+          {statusMessage}
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <FilterButton
           label="すべて"
@@ -205,11 +236,6 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                       未タグ付け
                     </span>
                   )}
-                  <span
-                    className={`inline-block ml-1.5 align-middle text-[10px] px-1.5 py-0.5 rounded-full font-medium ${SURVEY_STATUS_BADGE_CLASS[store.surveyStatus]}`}
-                  >
-                    {SURVEY_STATUS_LABEL[store.surveyStatus]}
-                  </span>
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {store.areaName}
@@ -218,6 +244,20 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                 </p>
               </Link>
               <div className="flex items-center gap-2 shrink-0">
+                <select
+                  value={store.surveyStatus}
+                  disabled={statusChangingId === store.id}
+                  onChange={(e) =>
+                    handleStatusChange(store.id, e.target.value as SurveyStatus)
+                  }
+                  className={`text-[11px] px-2 py-1.5 rounded-button font-medium border-0 disabled:opacity-40 ${SURVEY_STATUS_BADGE_CLASS[store.surveyStatus]}`}
+                >
+                  {SURVEY_STATUSES.map((status) => (
+                    <option key={status} value={status}>
+                      {SURVEY_STATUS_LABEL[status]}
+                    </option>
+                  ))}
+                </select>
                 <PublishToggle storeId={store.id} isPublished={store.is_published} />
                 <Link
                   href={`/admin/stores/${store.id}`}

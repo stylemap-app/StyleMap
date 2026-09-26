@@ -135,3 +135,70 @@ export async function saveStoreProgress(
     return { ok: false, message: err instanceof Error ? err.message : "保存に失敗しました" };
   }
 }
+
+export type SetSurveyStatusResult =
+  | { ok: true; surveyStatus: SurveyStatus; published: boolean }
+  | { ok: false; message: string };
+
+// タグ・価格帯には触れず、survey_statusだけを手動で切り替える
+// （管理画面の店舗一覧・現地調査画面のステータス選択セレクトから呼ぶ）。
+// 「訪問済み」以外に変更する時は、未確認の店を地図に出さないため常に非公開にする。
+// 「訪問済み」に変更する時は、既存のタグ・価格帯が公開条件（系統タグ1件以上・
+// 価格帯設定済み）を満たしていれば公開する。満たさなければ変更しない
+export async function setSurveyStatus(
+  storeId: string,
+  status: SurveyStatus
+): Promise<SetSurveyStatusResult> {
+  try {
+    const supabase = createAdminClient();
+
+    const updatePayload: Record<string, unknown> = { survey_status: status };
+
+    if (status !== "visited") {
+      updatePayload.is_published = false;
+    } else {
+      const { data: storeRow, error: storeError } = await supabase
+        .from("stores")
+        .select("price_range")
+        .eq("id", storeId)
+        .eq("is_real_store", true)
+        .maybeSingle();
+      if (storeError) return { ok: false, message: storeError.message };
+      if (!storeRow) return { ok: false, message: "店舗が見つかりません" };
+
+      const { data: styleTagRows, error: styleFetchError } = await supabase
+        .from("tag_masters")
+        .select("id")
+        .eq("type", "style");
+      if (styleFetchError) return { ok: false, message: styleFetchError.message };
+      const styleTagIdSet = new Set((styleTagRows ?? []).map((t) => t.id));
+
+      const { data: storeTagRows, error: storeTagsError } = await supabase
+        .from("store_tags")
+        .select("tag_id")
+        .eq("store_id", storeId);
+      if (storeTagsError) return { ok: false, message: storeTagsError.message };
+      const hasStyleTag = (storeTagRows ?? []).some((t) => styleTagIdSet.has(t.tag_id));
+
+      if (hasStyleTag && storeRow.price_range !== null) {
+        updatePayload.is_published = true;
+      }
+      // 条件を満たさない場合は is_published を変更しない（非公開のまま）
+    }
+
+    const { error: updateError } = await supabase
+      .from("stores")
+      .update(updatePayload)
+      .eq("id", storeId)
+      .eq("is_real_store", true);
+    if (updateError) return { ok: false, message: updateError.message };
+
+    return {
+      ok: true,
+      surveyStatus: status,
+      published: updatePayload.is_published === true,
+    };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "保存に失敗しました" };
+  }
+}
