@@ -285,13 +285,19 @@ export default function SurveyClient({
     setIsSaving(true);
     setSaveError(null);
     try {
-      await saveSurveyResult({
+      const result = await saveSurveyResult({
         storeId: currentStore.id,
         tagIds: mergeTagIdsForSave(currentStore, selectedTagIds, allTags),
         priceRange,
         operatorReview: memo,
         surveyStatus: status,
       });
+      if (!result.ok) {
+        // 失敗時は移動しない。次に同じ操作をやり直せるよう確認モーダルも閉じておく
+        setSaveError(result.message);
+        setPendingNav(null);
+        return;
+      }
       setStores((prev) =>
         prev.map((s) =>
           s.id === currentStore.id
@@ -316,7 +322,7 @@ export default function SurveyClient({
         setFinished(true);
       }
     } catch (err) {
-      // 失敗時は移動しない。次に同じ操作をやり直せるよう確認モーダルも閉じておく
+      // Server Action呼び出し自体が失敗した場合（ネットワーク断など）の保険
       setSaveError(err instanceof Error ? err.message : "保存に失敗しました");
       setPendingNav(null);
     } finally {
