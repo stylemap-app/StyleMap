@@ -3,6 +3,11 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPlaceWithCache } from "@/lib/places/cache";
 import type { TagMaster } from "@/types/store";
+import {
+  SURVEY_STATUS_LABEL,
+  SURVEY_STATUS_BADGE_CLASS,
+  type SurveyStatus,
+} from "@/lib/surveyStatus";
 import StoreTagForm from "./StoreTagForm";
 
 export default async function AdminStoreEditPage({
@@ -14,7 +19,7 @@ export default async function AdminStoreEditPage({
   const { data: store } = await supabase
     .from("stores")
     .select(
-      "id, is_published, is_hidden, operator_review, nearest_station, price_range, google_place_id, is_real_store, store_tags(tag_id)"
+      "id, is_published, is_hidden, operator_review, nearest_station, price_range, google_place_id, is_real_store, survey_status, store_tags(tag_id)"
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -66,6 +71,20 @@ export default async function AdminStoreEditPage({
         )}
       </section>
 
+      <p className="text-xs text-gray-500 flex items-center gap-1.5">
+        現在の状態：
+        <span
+          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${SURVEY_STATUS_BADGE_CLASS[store.survey_status as SurveyStatus]}`}
+        >
+          {SURVEY_STATUS_LABEL[store.survey_status as SurveyStatus]}
+        </span>
+        <span
+          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${store.is_published ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}
+        >
+          {store.is_published ? "公開中" : "未公開"}
+        </span>
+      </p>
+
       <StoreTagForm
         storeId={store.id}
         allTags={allTags}
@@ -73,7 +92,6 @@ export default async function AdminStoreEditPage({
         initialPriceRange={store.price_range}
         initialNearestStation={store.nearest_station ?? ""}
         initialOperatorReview={store.operator_review ?? ""}
-        initialIsPublished={store.is_published}
       />
     </div>
   );

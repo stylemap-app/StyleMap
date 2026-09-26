@@ -1,44 +1,46 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getAdminUser } from "@/lib/admin";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { saveStoreProgress, type SaveStoreProgressResult } from "@/lib/admin/saveStoreProgress";
+import type { PriceRange } from "@/types/store";
 
-export async function saveStoreTags(storeId: string, formData: FormData) {
+export type SaveStoreTagsInput = {
+  tagIds: number[];
+  priceRange: PriceRange | null;
+  nearestStation: string;
+  operatorReview: string;
+};
+
+export type SaveStoreTagsResult = SaveStoreProgressResult;
+
+// このUIが編集を担当するタグ種別（現地調査画面の管轄+商品カテゴリ）
+const MANAGED_TAG_TYPES = ["style", "category", "vibe", "gender", "age_group"];
+
+// タグ編集画面（/admin/stores/[id]）の「保存」から呼ばれる。
+// 保存すると survey_status は「対象外」以外なら「訪問済み」になる
+// （このUIでタグを付けた＝実質的に調査が完了したとみなすため）
+export async function saveStoreTags(
+  storeId: string,
+  input: SaveStoreTagsInput
+): Promise<SaveStoreTagsResult> {
   const user = await getAdminUser();
-  if (!user) throw new Error("Forbidden");
+  if (!user) return { ok: false, message: "Forbidden" };
 
-  const tagIds = formData
-    .getAll("tag")
-    .map((v) => Number(v))
-    .filter((n) => Number.isFinite(n));
-  const priceRangeRaw = formData.get("priceRange");
-  const priceRange = priceRangeRaw ? Number(priceRangeRaw) : null;
-  const nearestStation =
-    (formData.get("nearestStation") as string | null)?.trim() || null;
-  const operatorReview =
-    (formData.get("operatorReview") as string | null)?.trim() || null;
-  const isPublished = formData.get("isPublished") === "true";
+  const result = await saveStoreProgress({
+    storeId,
+    managedTagTypes: MANAGED_TAG_TYPES,
+    tagIds: input.tagIds,
+    priceRange: input.priceRange,
+    operatorReview: input.operatorReview,
+    nearestStation: input.nearestStation.trim() || null,
+    action: "edit",
+  });
 
-  const supabase = createAdminClient();
-
-  await supabase
-    .from("stores")
-    .update({
-      price_range: priceRange,
-      nearest_station: nearestStation,
-      operator_review: operatorReview,
-      operator_review_updated_at: operatorReview ? new Date().toISOString() : null,
-      is_published: isPublished,
-    })
-    .eq("id", storeId);
-
-  await supabase.from("store_tags").delete().eq("store_id", storeId);
-  if (tagIds.length > 0) {
-    await supabase
-      .from("store_tags")
-      .insert(tagIds.map((tagId) => ({ store_id: storeId, tag_id: tagId })));
+  if (result.ok) {
+    revalidatePath("/admin");
+    revalidatePath(`/admin/stores/${storeId}`);
+    revalidatePath("/admin/survey");
   }
-
-  redirect("/admin");
+  return result;
 }

@@ -42,6 +42,8 @@ type SurveyDraft = {
   savedAt: string;
 };
 
+type SavedToast = { message: string; note?: string };
+
 const DRAFT_KEY_PREFIX = "stylemap:survey-draft:";
 const LAST_STORE_KEY = "stylemap:survey-last-store";
 
@@ -103,9 +105,13 @@ function writeLastStoreId(storeId: string) {
 export default function SurveyClient({
   stores: initialStores,
   allTags,
+  initialStoreId,
 }: {
   stores: SurveyStore[];
   allTags: TagMaster[];
+  // /admin の店舗一覧から「その店の調査画面を開く」導線（/admin/survey?store=xxx）用。
+  // 指定があればリロード復元より優先してこの店舗を開く
+  initialStoreId?: string | null;
 }) {
   // 保存のたびにサーバーへ再取得しに行かず、ローカル状態を直接更新する
   // （現地での連続入力を優先し、通信は保存の書き込みだけに絞るため）
@@ -114,6 +120,9 @@ export default function SurveyClient({
   // （下書き復元バナーは「今開いている店舗」でしか判定しないため、これがないと
   // リロード直後は常に1件目の店舗が開き、編集中だった店舗の下書きに気づけない）
   const [currentStoreId, setCurrentStoreId] = useState<string | null>(() => {
+    if (initialStoreId && initialStores.some((s) => s.id === initialStoreId)) {
+      return initialStoreId;
+    }
     const last = readLastStoreId();
     if (last && initialStores.some((s) => s.id === last)) return last;
     return initialStores[0]?.id ?? null;
@@ -134,7 +143,7 @@ export default function SurveyClient({
   const [showVibeGuide, setShowVibeGuide] = useState(false);
   const [pendingNav, setPendingNav] = useState<NavigationTarget | null>(null);
   const [pendingDraft, setPendingDraft] = useState<SurveyDraft | null>(null);
-  const [savedToast, setSavedToast] = useState<string | null>(null);
+  const [savedToast, setSavedToast] = useState<SavedToast | null>(null);
   const savedToastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filteredStores = useMemo(() => {
@@ -263,10 +272,10 @@ export default function SurveyClient({
     }
   };
 
-  const showSavedToast = (name: string) => {
-    setSavedToast(name);
+  const showSavedToast = (toast: SavedToast) => {
+    setSavedToast(toast);
     if (savedToastTimer.current) clearTimeout(savedToastTimer.current);
-    savedToastTimer.current = setTimeout(() => setSavedToast(null), 2000);
+    savedToastTimer.current = setTimeout(() => setSavedToast(null), 2500);
   };
 
   const runSave = async (status: "visited" | "excluded", navTarget?: NavigationTarget) => {
@@ -306,14 +315,23 @@ export default function SurveyClient({
                 selectedTagIds: mergeTagIdsForSave(currentStore, selectedTagIds, allTags),
                 priceRange,
                 operatorReview: memo,
-                surveyStatus: status,
+                surveyStatus: result.surveyStatus,
               }
             : s
         )
       );
       clearDraft(currentStore.id);
       setPendingNav(null);
-      showSavedToast(savedName);
+      if (status === "excluded") {
+        showSavedToast({ message: `保存しました ✓（${savedName}を対象外にしました）` });
+      } else if (result.published) {
+        showSavedToast({ message: `保存しました ✓ 調査済み・公開しました（${savedName}）` });
+      } else {
+        showSavedToast({
+          message: `保存しました ✓（${savedName}を調査済みにしました）`,
+          note: "公開には系統タグと価格帯が必要です",
+        });
+      }
       if (targetId) {
         setCurrentStoreId(targetId);
         setFinished(false);
@@ -393,7 +411,10 @@ export default function SurveyClient({
     <div className="flex flex-col h-[calc(100dvh-48px)] -mx-4 -mt-5 -mb-5">
       {savedToast && (
         <div className="shrink-0 bg-green-600 text-white text-sm font-medium px-4 py-2 text-center">
-          保存しました ✓（{savedToast}）
+          {savedToast.message}
+          {savedToast.note && (
+            <div className="text-[11px] font-normal text-green-50 mt-0.5">{savedToast.note}</div>
+          )}
         </div>
       )}
       {saveError && (

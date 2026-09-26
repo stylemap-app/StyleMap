@@ -18,7 +18,11 @@ const AREA_ID_TO_NAME = new Map(
   ])
 );
 
-export default async function AdminSurveyPage() {
+export default async function AdminSurveyPage({
+  searchParams,
+}: {
+  searchParams: { store?: string };
+}) {
   const supabase = createAdminClient();
 
   const { data } = await supabase
@@ -57,6 +61,10 @@ export default async function AdminSurveyPage() {
     }));
 
   return (
-    <SurveyClient stores={surveyStores} allTags={(tagMasterRows ?? []) as TagMaster[]} />
+    <SurveyClient
+      stores={surveyStores}
+      allTags={(tagMasterRows ?? []) as TagMaster[]}
+      initialStoreId={searchParams.store ?? null}
+    />
   );
 }

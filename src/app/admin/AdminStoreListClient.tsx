@@ -188,7 +188,11 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                 onChange={() => toggleSelected(store.id)}
                 className="shrink-0"
               />
-              <div className="min-w-0 flex-1">
+              <Link
+                href={`/admin/survey?store=${store.id}`}
+                className="min-w-0 flex-1 block active:opacity-70"
+                title="この店舗の現地調査画面を開く"
+              >
                 <p className="text-sm font-semibold text-ink truncate">
                   {store.name}
                   {!store.is_published && (
@@ -212,7 +216,7 @@ export default function AdminStoreListClient({ stores }: { stores: AdminStoreLis
                   &ensp;・&ensp;タグ{store.tagCount}件
                   {store.is_hidden && <>&ensp;・&ensp;（掲載停止中）</>}
                 </p>
-              </div>
+              </Link>
               <div className="flex items-center gap-2 shrink-0">
                 <PublishToggle storeId={store.id} isPublished={store.is_published} />
                 <Link

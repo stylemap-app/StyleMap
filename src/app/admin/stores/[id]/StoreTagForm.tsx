@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { PriceRange, TagMaster } from "@/types/store";
 import { PRICE_RANGE_OPTIONS } from "@/lib/priceRange";
 import { saveStoreTags } from "./actions";
@@ -12,8 +12,9 @@ type Props = {
   initialPriceRange: PriceRange | null;
   initialNearestStation: string;
   initialOperatorReview: string;
-  initialIsPublished: boolean;
 };
+
+type Banner = { type: "success" | "error"; message: string; note?: string };
 
 export default function StoreTagForm({
   storeId,
@@ -22,7 +23,6 @@ export default function StoreTagForm({
   initialPriceRange,
   initialNearestStation,
   initialOperatorReview,
-  initialIsPublished,
 }: Props) {
   const [selectedTagIds, setSelectedTagIds] = useState<Set<number>>(
     new Set(initialSelectedTagIds)
@@ -30,7 +30,9 @@ export default function StoreTagForm({
   const [priceRange, setPriceRange] = useState<PriceRange | null>(initialPriceRange);
   const [nearestStation, setNearestStation] = useState(initialNearestStation);
   const [operatorReview, setOperatorReview] = useState(initialOperatorReview);
-  const [isPublished, setIsPublished] = useState(initialIsPublished);
+  const [isSaving, setIsSaving] = useState(false);
+  const [banner, setBanner] = useState<Banner | null>(null);
+  const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const byType = (type: string) => allTags.filter((t) => t.type === type);
 
@@ -43,8 +45,64 @@ export default function StoreTagForm({
     });
   };
 
+  const handleSave = async () => {
+    if (bannerTimer.current) clearTimeout(bannerTimer.current);
+    setIsSaving(true);
+    setBanner(null);
+    try {
+      const result = await saveStoreTags(storeId, {
+        tagIds: Array.from(selectedTagIds),
+        priceRange,
+        nearestStation,
+        operatorReview,
+      });
+      if (!result.ok) {
+        setBanner({ type: "error", message: result.message });
+        return;
+      }
+      const next: Banner = result.published
+        ? { type: "success", message: "保存しました ✓ 調査済み・公開しました" }
+        : {
+            type: "success",
+            message: "保存しました ✓（調査済みにしました）",
+            note: "公開には系統タグと価格帯が必要です",
+          };
+      setBanner(next);
+      bannerTimer.current = setTimeout(() => setBanner(null), 2500);
+    } catch (err) {
+      setBanner({
+        type: "error",
+        message: err instanceof Error ? err.message : "保存に失敗しました",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
-    <form action={saveStoreTags.bind(null, storeId)} className="space-y-6">
+    <div className="space-y-6">
+      {banner && banner.type === "success" && (
+        <div className="rounded-button bg-green-600 text-white text-sm font-medium px-4 py-2.5 text-center">
+          {banner.message}
+          {banner.note && (
+            <div className="text-[11px] font-normal text-green-50 mt-0.5">{banner.note}</div>
+          )}
+        </div>
+      )}
+      {banner && banner.type === "error" && (
+        <div className="rounded-button bg-red-600 text-white text-sm px-4 py-2.5 flex items-start justify-between gap-3">
+          <p className="flex-1">{banner.message}</p>
+          <button
+            type="button"
+            onClick={() => setBanner(null)}
+            className="shrink-0 font-bold active:opacity-70"
+            aria-label="エラーを閉じる"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <TagCheckboxGroup
         title="系統タグ"
         tags={byType("style")}
@@ -72,11 +130,6 @@ export default function StoreTagForm({
         onToggle={toggleTag}
       />
 
-      {/* AI推定でタグ選択がSet状態で一元管理されるため、実際の送信はhidden inputで行う */}
-      {Array.from(selectedTagIds).map((id) => (
-        <input key={id} type="hidden" name="tag" value={id} />
-      ))}
-
       <section>
         <h2 className="text-[11px] font-medium text-gray-500 uppercase tracking-label mb-2">
           価格帯
@@ -102,7 +155,6 @@ export default function StoreTagForm({
           最寄駅
         </label>
         <input
-          name="nearestStation"
           value={nearestStation}
           onChange={(e) => setNearestStation(e.target.value)}
           className="w-full h-10 rounded-button border border-gray-300 px-3 text-sm"
@@ -114,7 +166,6 @@ export default function StoreTagForm({
           スタッフより一言
         </label>
         <textarea
-          name="operatorReview"
           value={operatorReview}
           onChange={(e) => setOperatorReview(e.target.value)}
           rows={4}
@@ -122,26 +173,15 @@ export default function StoreTagForm({
         />
       </section>
 
-      <section>
-        <label className="flex items-center gap-2 text-sm text-ink">
-          <input
-            type="checkbox"
-            name="isPublished"
-            value="true"
-            checked={isPublished}
-            onChange={(e) => setIsPublished(e.target.checked)}
-          />
-          公開する
-        </label>
-      </section>
-
       <button
-        type="submit"
-        className="w-full h-12 rounded-button bg-clay text-paper text-sm font-bold active:opacity-80"
+        type="button"
+        onClick={handleSave}
+        disabled={isSaving}
+        className="w-full h-12 rounded-button bg-clay text-paper text-sm font-bold disabled:opacity-40 active:opacity-80"
       >
-        保存
+        {isSaving ? "保存中..." : "保存"}
       </button>
-    </form>
+    </div>
   );
 }
 
