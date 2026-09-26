@@ -54,28 +54,27 @@ export async function bulkSetPublished(
 }
 
 // 一覧のチェックボックス選択から複数店舗をまとめて現地調査ステータスを
-// 変更する。is_real_store=true をクエリ条件に含め、ダミー店舗には
-// 影響しないことをDBクエリレベルで保証する
+// 変更する。1件ずつの手動切り替え（updateSurveyStatus）と同じ
+// setSurveyStatus を使うことで、公開連動ルール（訪問済み以外は非公開、
+// 訪問済みはタグ・価格帯の条件を満たせば公開）を一括操作でも揃える
 export async function bulkSetSurveyStatus(
   storeIds: string[],
-  surveyStatus: "not_started" | "planned" | "visited" | "excluded"
+  surveyStatus: SurveyStatus
 ): Promise<{ updatedCount: number }> {
   const user = await getAdminUser();
   if (!user) throw new Error("Forbidden");
   if (storeIds.length === 0) return { updatedCount: 0 };
 
-  const supabase = createAdminClient();
-  const { data, error } = await supabase
-    .from("stores")
-    .update({ survey_status: surveyStatus })
-    .in("id", storeIds)
-    .eq("is_real_store", true)
-    .select("id");
+  const results = await Promise.all(storeIds.map((id) => setSurveyStatus(id, surveyStatus)));
+  const updatedCount = results.filter((r) => r.ok).length;
 
-  if (error) throw new Error(error.message);
+  if (updatedCount === 0) {
+    const firstError = results.find((r): r is { ok: false; message: string } => !r.ok);
+    throw new Error(firstError?.message ?? "更新に失敗しました");
+  }
 
   revalidatePath("/admin");
-  return { updatedCount: data?.length ?? 0 };
+  return { updatedCount };
 }
 
 // 一覧の各行にあるステータスセレクトから、タグ・価格帯は変更せず
